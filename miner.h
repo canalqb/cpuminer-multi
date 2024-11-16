@@ -184,8 +184,11 @@ extern int scanhash_x11(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 
 extern void cryptonight_hash(void* output, const void* input, size_t input_len);
 
+// Declare struct cryptonight_ctx before using it
+struct cryptonight_ctx;
+
 extern int scanhash_cryptonight(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
-		uint32_t max_nonce, unsigned long *hashes_done, struct cryptonight_ctx *persistentctx);
+        uint32_t max_nonce, unsigned long *hashes_done, struct cryptonight_ctx *persistentctx);
 
 struct thr_info {
 	int		id;
