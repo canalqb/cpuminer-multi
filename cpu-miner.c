@@ -147,6 +147,9 @@ static bool submit_old = false;
 bool use_syslog = false;
 static bool opt_background = false;
 static bool opt_quiet = false;
+static bool opt_no_affinity = false;
+int opt_priority = 19;
+int opt_throttle = 0;
 static int opt_retries = -1;
 static int opt_fail_pause = 10;
 bool jsonrpc_2 = false;
@@ -229,6 +232,10 @@ Options:\n\
 #endif
         "\
       --benchmark       run in offline benchmark mode\n\
+      --no-affinity     disable automatic CPU affinity pinning of threads\n\
+      --priority=N      set thread nice priority (default: 19, lower=more CPU)\n\
+      --throttle=N      sleep N microseconds between each hash attempt\n\
+                          (higher = lower CPU usage, useful for desktop use)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -253,10 +260,12 @@ static struct option const options[] = {
         { "config", 1, NULL, 'c' },
         { "debug", 0, NULL, 'D' },
         { "help", 0, NULL, 'h' },
+        { "no-affinity", 0, NULL, 1010 },
         { "no-longpoll", 0, NULL, 1003 },
         { "no-redirect", 0, NULL, 1009 },
         { "no-stratum", 0, NULL, 1007 },
         { "pass", 1, NULL, 'p' },
+        { "priority", 1, NULL, 1011 },
         { "protocol-dump", 0, NULL, 'P' },
         { "proxy", 1, NULL, 'x' },
         { "quiet", 0, NULL, 'q' },
@@ -267,6 +276,7 @@ static struct option const options[] = {
         { "syslog", 0, NULL, 'S' },
 #endif
         { "threads", 1, NULL, 't' },
+        { "throttle", 1, NULL, 1012 },
         { "timeout", 1, NULL, 'T' },
         { "url", 1, NULL, 'o' },
         { "user", 1, NULL, 'u' },
@@ -424,7 +434,8 @@ bool rpc2_job_decode(const json_t *job, struct work *work) {
             float hashrate = 0.;
             pthread_mutex_lock(&stats_lock);
             for (size_t i = 0; i < opt_n_threads; i++)
-                hashrate += thr_hashrates[i] / thr_times[i];
+                if (thr_times[i] > 0)
+                    hashrate += thr_hashrates[i] / thr_times[i];
             pthread_mutex_unlock(&stats_lock);
             double difficulty = (((double) 0xffffffff) / target);
             applog(LOG_INFO, "Pool set diff to %g", difficulty);
@@ -503,7 +514,10 @@ bool rpc2_login_decode(const json_t *val) {
         goto err_out;
     }
 
-    memcpy(&rpc2_id, id, 64);
+    /* strncpy + explicit terminator: the previous memcpy(..., 64) could read
+     * past the end of a short id or overflow the 64-byte buffer on a long one */
+    strncpy(rpc2_id, id, sizeof(rpc2_id) - 1);
+    rpc2_id[sizeof(rpc2_id) - 1] = '\0';
 
     if(opt_debug)
         applog(LOG_DEBUG, "Auth id: %s", id);
@@ -536,7 +550,8 @@ static void share_result(int result, struct work *work, const char *reason) {
     hashrate = 0.;
     pthread_mutex_lock(&stats_lock);
     for (i = 0; i < opt_n_threads; i++)
-        hashrate += thr_hashrates[i] / thr_times[i];
+        if (thr_times[i] > 0)
+            hashrate += thr_hashrates[i] / thr_times[i];
     result ? accepted_count++ : rejected_count++;
     pthread_mutex_unlock(&stats_lock);
 
@@ -1016,6 +1031,34 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work) {
 }
 
 struct cryptonight_ctx *persistentctxs[MAX_THREADS] = { NULL };
+/* Records how each persistent context was allocated so we free it correctly:
+ * 0 = none, 1 = mmap/VirtualAlloc (hugepages), 2 = malloc */
+static unsigned char persistentctx_alloc[MAX_THREADS] = { 0 };
+
+/* Free every per-thread cryptonight context, releasing the memory the way
+ * it was obtained (munmap/VirtualFree vs free). Safe to call multiple times. */
+static void free_cryptonight_ctxs(void) {
+	int i;
+	for (i = 0; i < opt_n_threads; i++) {
+		if (!persistentctxs[i])
+			continue;
+#if defined __unix__ && (!defined __APPLE__)
+		if (persistentctx_alloc[i] == 1)
+			munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
+		else
+			free(persistentctxs[i]);
+#elif defined _WIN32
+		if (persistentctx_alloc[i] == 1)
+			VirtualFree(persistentctxs[i], 0, MEM_RELEASE);
+		else
+			free(persistentctxs[i]);
+#else
+		free(persistentctxs[i]);
+#endif
+		persistentctxs[i] = NULL;
+		persistentctx_alloc[i] = 0;
+	}
+}
 
 static void *miner_thread(void *userdata) {
     struct thr_info *mythr = userdata;
@@ -1033,20 +1076,19 @@ static void *miner_thread(void *userdata) {
      * error if it fails */
      #ifdef __linux
     if (!opt_benchmark) {
-        //setpriority(PRIO_PROCESS, 0, 19);
-        if(!geteuid()) setpriority(PRIO_PROCESS, 0, -14);
+        setpriority(PRIO_PROCESS, 0, opt_priority);
         drop_policy();
     }
 	#endif
 	
     /* Cpu affinity only makes sense if the number of threads is a multiple
-     * of the number of CPUs */
-    /*if (num_processors > 1 && opt_n_threads % num_processors == 0) {
+     * of the number of CPUs. Disabled via --no-affinity. */
+    if (!opt_no_affinity && num_processors > 1 && opt_n_threads % num_processors == 0) {
         if (!opt_quiet)
             applog(LOG_INFO, "Binding thread %d to cpu %d", thr_id,
                     thr_id % num_processors);
         affine_to_cpu(thr_id, thr_id % num_processors);
-    }*/
+    }
     
 	persistentctx = persistentctxs[thr_id];
 	if(!persistentctx && opt_algo == ALGO_CRYPTONIGHT)
@@ -1054,14 +1096,25 @@ static void *miner_thread(void *userdata) {
 		#if defined __unix__ && (!defined __APPLE__) && (!defined DISABLE_LINUX_HUGEPAGES)
 		persistentctx = (struct cryptonight_ctx *)mmap(0, sizeof(struct cryptonight_ctx), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE, 0, 0);
 		if(persistentctx == MAP_FAILED) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
-		madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
-		if(!geteuid()) mlock(persistentctx, sizeof(struct cryptonight_ctx));
+		else persistentctx_alloc[thr_id] = 1;
+		if(persistentctx) {
+			madvise(persistentctx, sizeof(struct cryptonight_ctx), MADV_RANDOM | MADV_WILLNEED | MADV_HUGEPAGE);
+			if(!geteuid()) mlock(persistentctx, sizeof(struct cryptonight_ctx));
+		}
 		#elif defined _WIN32
 		persistentctx = VirtualAlloc(NULL, sizeof(struct cryptonight_ctx), MEM_LARGE_PAGES, PAGE_READWRITE);
-		if(!persistentctx) persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
+		if(persistentctx) persistentctx_alloc[thr_id] = 1;
+		else persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 		#else
 		persistentctx = (struct cryptonight_ctx *)malloc(sizeof(struct cryptonight_ctx));
 		#endif
+		if (persistentctx) {
+			persistentctxs[thr_id] = persistentctx;
+			if (persistentctx_alloc[thr_id] == 0)
+				persistentctx_alloc[thr_id] = 2; /* malloc fallback */
+		} else {
+			applog(LOG_ERR, "failed to allocate cryptonight context for thread %d", thr_id);
+		}
 	}
 	
     uint32_t *nonceptr = (uint32_t*) (((char*)work.data) + (jsonrpc_2 ? 39 : 76));
@@ -1144,7 +1197,8 @@ static void *miner_thread(void *userdata) {
             rc = scanhash_cryptonight(thr_id, work.data, work.target,
                     max_nonce, &hashes_done, persistentctx);
 
-        /* record scanhash elapsed time */
+        /* record scanhash elapsed time (before any throttle pause so the
+         * reported hashrate reflects real hashing speed) */
         gettimeofday(&tv_end, NULL );
         timeval_subtract(&diff, &tv_end, &tv_start);
         if (diff.tv_usec || diff.tv_sec) {
@@ -1153,11 +1207,21 @@ static void *miner_thread(void *userdata) {
             thr_times[thr_id] = (diff.tv_sec + 1e-6 * diff.tv_usec);
             pthread_mutex_unlock(&stats_lock);
         }
-        /*if (!opt_quiet) {
+
+        /* throttle: pause between hash batches to reduce CPU usage and heat.
+         * opt_throttle is in microseconds; on Windows the granularity is ms */
+        if (opt_throttle) {
+#ifdef WIN32
+            Sleep(opt_throttle / 1000 > 0 ? opt_throttle / 1000 : 1);
+#else
+            usleep(opt_throttle);
+#endif
+        }
+        if (!opt_quiet) {
             switch(opt_algo) {
             case ALGO_CRYPTONIGHT:
                 applog(LOG_INFO, "thread %d: %lu hashes, %.2f H/s", thr_id,
-                        hashes_done, thr_hashrates[thr_id]);
+                        hashes_done, thr_hashrates[thr_id] / thr_times[thr_id]);
                 break;
             default:
                 sprintf(s, thr_hashrates[thr_id] >= 1e6 ? "%.0f" : "%.2f",
@@ -1182,7 +1246,7 @@ static void *miner_thread(void *userdata) {
                     break;
                 }
             }
-        }*/
+        }
 
         /* if nonce found, submit work */
         if (rc && !opt_benchmark && !submit_work(mythr, &work))
@@ -1484,14 +1548,16 @@ static void parse_arg(int key, char *arg) {
 
     switch (key) {
     case 'a':
-        for (i = 0; i < ARRAY_SIZE(algo_names); i++) {
-            if (algo_names[i] && !strcmp(arg, algo_names[i])) {
-                //opt_algo = i;
-                break;
-            }
-        }
-        if (i == ARRAY_SIZE(algo_names))
+        /* This build implements only the CryptoNight scan loop. Any other
+         * algorithm name is rejected explicitly instead of being silently
+         * ignored (the previous code accepted any name but never set opt_algo,
+         * so the miner always ran cryptonight regardless of the request). */
+        if (strcmp(arg, "cryptonight")) {
+            applog(LOG_ERR, "Algorithm '%s' is not supported. "
+                    "This build of cpuminer-multi only supports: cryptonight", arg);
             show_usage_and_exit(1);
+        }
+        opt_algo = ALGO_CRYPTONIGHT;
         break;
     case 'B':
         opt_background = true;
@@ -1643,6 +1709,25 @@ static void parse_arg(int key, char *arg) {
     case 1009:
         opt_redirect = false;
         break;
+    case 1010: /* --no-affinity */
+        opt_no_affinity = true;
+        break;
+    case 1011: /* --priority */
+        v = atoi(arg);
+        if (v < -20 || v > 19) { /* nice range */
+            applog(LOG_ERR, "Invalid priority value: %s (must be -20 to 19)", arg);
+            show_usage_and_exit(1);
+        }
+        opt_priority = v;
+        break;
+    case 1012: /* --throttle */
+        v = atoi(arg);
+        if (v < 0 || v > 1000000) { /* 0 = off, up to 1 second per hash */
+            applog(LOG_ERR, "Invalid throttle value: %s (must be 0 to 1000000)", arg);
+            show_usage_and_exit(1);
+        }
+        opt_throttle = v;
+        break;
     case 'S':
         use_syslog = true;
         break;
@@ -1710,25 +1795,18 @@ static void parse_cmdline(int argc, char *argv[]) {
 
 #ifndef WIN32
 static void signal_handler(int sig) {
-	int i;
     switch (sig) {
     case SIGHUP:
         applog(LOG_INFO, "SIGHUP received");
         break;
     case SIGINT:
         applog(LOG_INFO, "SIGINT received, exiting");
-        #if defined __unix__ && (!defined __APPLE__)
-		if(opt_algo == ALGO_CRYPTONIGHT)
-			for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
-		#endif
+        free_cryptonight_ctxs();
         exit(0);
         break;
     case SIGTERM:
         applog(LOG_INFO, "SIGTERM received, exiting");
-        #if defined __unix__ && (!defined __APPLE__)
-		if(opt_algo == ALGO_CRYPTONIGHT)
-			for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
-		#endif
+        free_cryptonight_ctxs();
         exit(0);
         break;
     }
@@ -1924,15 +2002,14 @@ int main(int argc, char *argv[]) {
     }
 
     applog(LOG_INFO, "%d miner threads started, "
-            "using '%s' algorithm.", opt_n_threads, algo_names[opt_algo]);
+            "using '%s' algorithm (priority %d, throttle %dµs, affinity %s).",
+            opt_n_threads, algo_names[opt_algo], opt_priority, opt_throttle,
+            opt_no_affinity ? "off" : "on");
 
     /* main loop - simply wait for workio thread to exit */
     pthread_join(thr_info[work_thr_id].pth, NULL );
 
     applog(LOG_INFO, "workio thread dead, exiting.");
-	#if defined __unix__ && (!defined __APPLE__)
-	if(opt_algo == ALGO_CRYPTONIGHT)
-		for(i = 0; i < opt_n_threads; i++) munmap(persistentctxs[i], sizeof(struct cryptonight_ctx));
-	#endif
+    free_cryptonight_ctxs();
     return 0;
 }

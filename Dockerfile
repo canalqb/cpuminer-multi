@@ -1,25 +1,45 @@
 #
-# Dockerfile for cpuminer
-# usage: docker run creack/cpuminer --url xxxx --user xxxx --pass xxxx
-# ex: docker run creack/cpuminer --url stratum+tcp://ltc.pool.com:80 --user creack.worker1 --pass abcdef
+# Dockerfile do cpuminer-multi (@CanalQb)
 #
+# Uso básico:
+#   docker build -t cpuminer-multi .
+#   docker run cpuminer-multi --url <URL_DO_POOL> --user <USUARIO.TRABALHADOR> --pass x
 #
+# Otimização para a CPU:
+#   Por padrão a imagem usa flags genéricas (portável entre hosts).
+#   Se a imagem for rodar na MESMA máquina que compilou, use:
+#   docker build --build-arg MARCH=-march=native -t cpuminer-multi .
+#
+# Aviso de segurança:
+#   - O container roda como root por padrão. Para rodar como usuário comum,
+#     adicione: docker run --user $(id -u):$(id -g) ...
+#   - Este minerador exige CPU com AES-NI (verifique com `lscpu | grep aes`).
 
-FROM		ubuntu:12.10
-MAINTAINER	Guillaume J. Charmes <guillaume@charmes.net>
+FROM ubuntu:22.04
 
-RUN		apt-get update -qq
+LABEL maintainer="CanalQb <qrodrigob@gmail.com>"
 
-RUN		apt-get install -qqy automake
-RUN		apt-get install -qqy libcurl4-openssl-dev
-RUN		apt-get install -qqy git
-RUN		apt-get install -qqy make
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN		git clone https://github.com/pooler/cpuminer
+# Flags de compilação da CPU. "-march=native" otimiza para a máquina atual.
+ARG MARCH=
 
-RUN		cd cpuminer && ./autogen.sh
-RUN		cd cpuminer && ./configure CFLAGS="-O3"
-RUN		cd cpuminer && make
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+        build-essential \
+        autoconf \
+        automake \
+        libtool \
+        pkg-config \
+        libcurl4-openssl-dev \
+        git \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR		/cpuminer
-ENTRYPOINT	["./minerd"]
+WORKDIR /cpuminer
+RUN git clone https://github.com/canalqb/cpuminer-multi.git .
+RUN ./autogen.sh
+RUN CFLAGS="${MARCH} -O3" ./configure
+RUN make -j"$(nproc)"
+
+WORKDIR /cpuminer
+ENTRYPOINT ["./minerd"]

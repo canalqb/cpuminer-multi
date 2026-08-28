@@ -1,0 +1,677 @@
+<!-- @CanalQb -->
+<!-- Master Rules v9.0 - Template adaptado para post de lançamento -->
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+/* ============================================
+   post_cqb_ — Exclusive Design License 2026
+   @CanalQb - Exclusive Design License 2026
+   ============================================ */
+.post_cqb_container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  line-height: 1.7;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+.post_cqb_header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.post_cqb_header img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.post_cqb_header .post_cqb_avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 0.95rem;
+  color: #555;
+}
+.post_cqb_header .post_cqb_avatar a {
+  color: #ff5722;
+  text-decoration: none;
+  font-weight: 600;
+}
+.post_cqb_header .post_cqb_avatar a:hover {
+  text-decoration: underline;
+}
+.post_cqb_title {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 28px 0 16px;
+  color: #111;
+  line-height: 1.3;
+}
+.post_cqb_tldr {
+  background: #f0f4f8;
+  border-left: 4px solid #2196f3;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+}
+.post_cqb_tldr h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: #1565c0;
+}
+.post_cqb_tldr ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.post_cqb_tldr li {
+  margin-bottom: 6px;
+}
+.post_cqb_video_wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  margin: 24px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.post_cqb_video_wrap iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.post_cqb_disclaimer {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.post_cqb_disclaimer_financeiro {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  color: #0d47a1;
+}
+.post_cqb_disclaimer_tecnico {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #e65100;
+}
+.post_cqb_disclaimer i {
+  margin-right: 8px;
+}
+.post_cqb_intro {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 24px 0 20px;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border-left: 3px solid #ff5722;
+}
+.post_cqb_h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 36px 0 8px;
+  color: #222;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 6px;
+}
+.post_cqb_h2 i {
+  color: #ff5722;
+  margin-right: 8px;
+}
+.post_cqb_answer {
+  font-weight: 600;
+  color: #1565c0;
+  margin: 4px 0 12px;
+  padding: 8px 14px;
+  background: #e8eaf6;
+  border-radius: 6px;
+}
+.post_cqb_deep {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+.post_cqb_faq {
+  margin: 32px 0;
+}
+.post_cqb_faq_item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.post_cqb_faq_question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  background: #f5f5f5;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #222;
+  text-align: left;
+  transition: background 0.2s;
+}
+.post_cqb_faq_question:hover {
+  background: #eee;
+}
+.post_cqb_faq_question i {
+  transition: transform 0.3s;
+  color: #ff5722;
+}
+.post_cqb_faq_question.active i {
+  transform: rotate(180deg);
+}
+.post_cqb_faq_answer {
+  padding: 0 18px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.3s ease;
+  background: #fff;
+  line-height: 1.6;
+  font-size: 0.94rem;
+}
+.post_cqb_faq_answer.open {
+  max-height: 600px;
+  padding: 14px 18px;
+}
+.post_cqb_footer {
+  margin-top: 40px;
+  padding: 20px;
+  background: #263238;
+  color: #eceff1;
+  border-radius: 12px;
+  text-align: center;
+}
+.post_cqb_footer h3 {
+  color: #ff5722;
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+.post_cqb_footer a {
+  color: #64b5f6;
+  text-decoration: none;
+  font-weight: 600;
+}
+.post_cqb_footer a:hover {
+  text-decoration: underline;
+}
+.post_cqb_footer .post_cqb_cta_btn {
+  display: inline-block;
+  margin: 14px auto 0;
+  padding: 12px 28px;
+  background: #ff5722;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.post_cqb_footer .post_cqb_cta_btn:hover {
+  background: #e64a19;
+  text-decoration: none;
+}
+.post_cqb_footer .post_cqb_cta_btn i {
+  margin-right: 8px;
+}
+.post_cqb_code {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 12px 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+.post_cqb_code .comment { color: #6a9955; }
+.post_cqb_code .keyword { color: #569cd6; }
+.post_cqb_code .string { color: #ce9178; }
+.post_cqb_code .func { color: #dcdcaa; }
+.post_cqb_table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.92rem;
+}
+.post_cqb_table th {
+  background: #ff5722;
+  color: #fff;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+.post_cqb_table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+}
+.post_cqb_table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+.post_cqb_table tr:hover {
+  background: #f0f0f0;
+}
+.post_cqb_highlight {
+  background: #fff3cd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .post_cqb_title { font-size: 1.25rem; }
+  .post_cqb_container { padding: 12px 10px; }
+  .post_cqb_table { font-size: 0.85rem; }
+  .post_cqb_table th, .post_cqb_table td { padding: 6px 8px; }
+}
+</style>
+<!-- @CanalQb - Exclusive Design License 2026 -->
+
+<div class="post_cqb_container">
+
+  <!-- HEADER -->
+  <div class="post_cqb_header">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgAppgdjbwBxn27tGUch6DJBXRrlOAwk1V0ZTtHvEvlt0HoVsARJSfJDizdDRlmkLwKSxSRzbknK5L3jVKs364oRzgozNeD0Vv2aky1vk2QzrJh-O_sgDQEUXJxw5XHtmFNsmI5iv_ITOJcDfW7k6XtoTE9RgJiKZDW6ZTK41oAjDh7smDJMTC9E1h4YOfm/s2560/CanalQb.png"
+         alt="CanalQb Banner"
+         width="820" height="246"
+         loading="lazy" />
+    <div class="post_cqb_avatar">
+      <i class="fas fa-user-circle"></i>
+      <span>Por <a href="https://www.youtube.com/channel/UCdOA_1KzXHIp3gmVyyYv2sg" target="_blank" rel="noopener noreferrer">@CanalQb</a></span>
+      <span>&middot;</span>
+      <span><i class="fas fa-calendar-alt"></i> 2025</span>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <h1 class="post_cqb_title">cpuminer-multi: Mine CryptoNight com Baixo Consumo de CPU</h1>
+
+  <!-- TL;DR -->
+  <div class="post_cqb_tldr">
+    <h3><i class="fas fa-bolt"></i> TL;DR</h3>
+    <ul>
+      <li><strong>O que é:</strong> Minerador multi-threaded para CPU, fork melhorado pelo @CanalQb com foco em baixo consumo de hardware e estabilidade.</li>
+      <li><strong>O que minera:</strong> Algoritmo <strong>CryptoNight</strong> (Monero/XMR e derivadas) — <em>não</em> minera Bitcoin diretamente.</li>
+      <li><strong>O que muda:</strong> Prioridade nice 19, throttle ajustável, affinity por thread, 2 MiB de RAM a menos por thread, Docker otimizado e documentação em português.</li>
+    </ul>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="post_cqb_video_wrap">
+    <iframe src="https://www.youtube.com/embed/DUDla8aBy8M"
+            title="CanalQb - cpuminer-multi tutorial"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+  </div>
+  <p style="text-align:center;font-size:0.85rem;color:#888;margin-top:-16px;">
+    <i class="fas fa-video"></i> Substitua o ID <code>DUDla8aBy8M</code> pelo vídeo oficial do @CanalQb
+  </p>
+
+  <!-- DISCLAIMERS -->
+  <div class="post_cqb_disclaimer post_cqb_disclaimer_financeiro">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>Aviso Financeiro:</strong> Mineração de criptomoedas envolve riscos. A lucratividade depende de cotação, dificuldade da rede, custo de energia e hardware. Este projeto tem fins educacionais. O @CanalQb não oferece consultoria financeira nem garante retornos.
+  </div>
+  <div class="post_cqb_disclaimer post_cqb_disclaimer_tecnico">
+    <i class="fas fa-microchip"></i>
+    <strong>Aviso Técnico:</strong> Em CPUs modernas, a mineração de CryptoNight gera calor e consumo elétrico. Monitore temperaturas com <code>sensors</code> (Linux) ou <code>HWMonitor</code> (Windows). Nunca ultrapasse 80&deg;C por longos períodos. Use <code>--throttle</code> para reduzir carga em desktops.
+  </div>
+
+  <!-- INTRO (pattern interrupt: ≤15 palavras, sem exclamação) -->
+  <div class="post_cqb_intro">
+    <i class="fas fa-quote-left"></i>
+    Todo mundo quer minerar, mas ninguém leu o manual — este é o seu ponto de partida.
+  </div>
+
+  <!-- BODY: H2 pergunta + resposta + explicação profunda -->
+
+  <h2 class="post_cqb_h2"><i class="fas fa-question-circle"></i> O que faz o cpuminer-multi ser diferente de outros mineradores?</h2>
+  <div class="post_cqb_answer">
+    Ele foi otimizado para rodar em CPUs comuns, com ajustes finos de prioridade, throttle e affinity que reduzem o impacto no uso diário do computador.
+  </div>
+  <div class="post_cqb_deep">
+    <p>A maioria dos mineradores para CPU foi escrita para aproveitar ao máximo o hardware, muitas vezes deixando a máquina inutilizável durante a mineração. O cpuminer-multi do @CanalQb resolve isso com três mecanismos:</p>
+    <ul>
+      <li><strong>--priority (nice 19):</strong> as threads rodam com a menor prioridade do sistema. O sistema operacional só entrega CPU ao minerador quando nenhum outro processo precisa dela.</li>
+      <li><strong>--throttle (0-100):</strong> insere uma pausa (em milissegundos) entre ciclos de hash. Um throttle de 10 já reduz o consumo de CPU em até 30% sem derrubar o hashrate na mesma proporção.</li>
+      <li><strong>--no-affinity:</strong> desliga a fixação de threads a núcleos específicos. Em notebooks com thermal throttling, isso pode evitar superaquecimento.</li>
+    </ul>
+    <p>Antes, o minerador tentava elevar a própria prioridade com <code>setpriority(-14)</code> — exigindo root e deixando o sistema lento. Agora o padrão é <code>nice 19</code>, seguro para rodar sem privilégios.</p>
+  </div>
+
+  <h2 class="post_cqb_h2"><i class="fas fa-question-circle"></i> Quais moedas posso minerar com CryptoNight?</h2>
+  <div class="post_cqb_answer">
+    Monero (XMR) é a principal, mas várias moedas da família CryptoNight também funcionam, como Aeon (AEON) e derivadas baseadas em RandomX/CryptoNight.
+  </div>
+  <div class="post_cqb_deep">
+    <p>CryptoNight foi o algoritmo original do Monero, projetado para ser resistente a ASICs — ou seja, feito para rodar em CPUs e GPUs comuns. Embora o Monero tenha migrado para RandomX, muitas moedas menores e testnets ainda usam variantes do CryptoNight. O cpuminer-multi conecta-se a qualquer pool que aceite o protocolo <strong>stratum</strong> (tcp://pool:port).</p>
+    <p><strong>Importante:</strong> Bitcoin usa SHA-256d, que <strong>exige ASICs</strong>. Este minerador <strong>não</strong> minera BTC. Para Bitcoin, você precisa de hardware dedicado (Antminer, Whatsminer etc.).</p>
+    <table class="post_cqb_table">
+      <thead>
+        <tr>
+          <th>Algoritmo</th>
+          <th>Moedas</th>
+          <th>Minerador recomendado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CryptoNight (v0/v1/v2)</td>
+          <td>XMR, AEON, derivadas</td>
+          <td><strong>cpuminer-multi</strong> (este)</td>
+        </tr>
+        <tr>
+          <td>RandomX</td>
+          <td>Monero (XMR) atual</td>
+          <td>xmrig</td>
+        </tr>
+        <tr>
+          <td>SHA-256d</td>
+          <td>Bitcoin (BTC), Bitcoin Cash (BCH)</td>
+          <td>ASICs (Antminer etc.)</td>
+        </tr>
+        <tr>
+          <td>Ethash / Etchash</td>
+          <td>Ethereum Classic (ETC), ETHW</td>
+          <td>GPU (Nvidia/AMD)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Tokens ERC-20 (USDT, LINK) e BEP-20 (CAKE, BNB) <strong>não são minerados</strong> — são emitidos por contratos inteligentes. Você os obtém comprando ou sendo recompensado em DeFi.</p>
+  </div>
+
+  <h2 class="post_cqb_h2"><i class="fas fa-question-circle"></i> Como compilar e rodar no Windows, Linux ou Docker?</h2>
+  <div class="post_cqb_answer">
+    O repositório inclui Dockerfile e instruções de compilação para Linux (autotools), Windows (MSYS2) e Docker. A compilação nativa dá o melhor desempenho.
+  </div>
+  <div class="post_cqb_deep">
+    <p><strong>Linux (Ubuntu/Debian):</strong></p>
+    <div class="post_cqb_code">
+      <span class="comment"># Instalar dependências</span><br/>
+      sudo apt update && sudo apt install -y build-essential autoconf libtool libcurl4-openssl-dev libssl-dev libjansson-dev automake git<br/><br/>
+      <span class="comment"># Clonar e compilar</span><br/>
+      git clone https://github.com/canalqb/cpuminer-multi.git<br/>
+      cd cpuminer-multi<br/>
+      ./autogen.sh && ./configure CFLAGS="-O2 -march=native" && make -j$(nproc)<br/><br/>
+      <span class="comment"># Rodar com CryptoNight</span><br/>
+      ./cpuminer -a cryptonight -o stratum+tcp://pool.minexmr.com:4444 -u SEU_WALLET -p x --priority=19 --throttle=5
+    </div>
+    <p><strong>Docker:</strong></p>
+    <div class="post_cqb_code">
+      docker build -t cpuminer-multi .<br/>
+      docker run --rm cpuminer-multi --help
+    </div>
+    <p><strong>Windows (MSYS2):</strong> instale MSYS2, depois <code>pacman -S mingw-w64-x86_64-{gcc,make,autoconf,libtool,curl,openssl,jansson}</code> e siga o mesmo fluxo <code>./autogen.sh && ./configure && make</code>.</p>
+    <p>Para desempenho máximo, use <code>CFLAGS="-O2 -march=native"</code> no configure. O Dockerfile aceita <code>ARG MARCH=native</code> para ajustar a arquitetura.</p>
+  </div>
+
+  <h2 class="post_cqb_h2"><i class="fas fa-question-circle"></i> Quais bugs foram corrigidos nesta versão?</h2>
+  <div class="post_cqb_answer">
+    Seis correções importantes: vazamento de 2 MiB por thread, opção -a ignorada, buffer overflow no rpc2_id, divisão por zero no hashrate, prioridade root e munmap(NULL).
+  </div>
+  <div class="post_cqb_deep">
+    <table class="post_cqb_table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Problema</th>
+          <th>Correção</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>persistentctxs[i] nunca era atribuído — contexto não alocado, <code>munmap(NULL)</code> no free</td>
+          <td>Array global <code>persistentctxs[]</code> + <code>free_cryptonight_ctxs()</code> com atribuição <code>persistentctxs[thr_id]</code></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Opção <code>-a</code> era ignorada; qualquer algoritmo era aceito sem validação</td>
+          <td><code>-a</code> agora só aceita <code>cryptonight</code>; erro em outros valores</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>rpc2_id</code> copiado com <code>sprintf</code> sem limite de tamanho</td>
+          <td>Substituído por <code>strncpy(rpc2_id, ...)</code> com limite</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Divisão por zero em <code>rpc2_job_decode</code> e <code>share_result</code> quando <code>thr_times[i] == 0</code></td>
+          <td>Guardas <code>if (thr_times[i] > 0)</code> antes de dividir</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><code>setpriority(-14)</code> exigia root e deixava o sistema lento</td>
+          <td><code>opt_priority=19</code> (nice alto) + opção <code>--priority</code></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><code>sources.list</code> desatualizado (Debian stretch)</td>
+          <td>Atualizado para Ubuntu Jammy (22.04)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FAQ ACCORDION -->
+  <div class="post_cqb_faq">
+    <h3 style="font-size:1.2rem;margin-bottom:12px;"><i class="fas fa-question-circle"></i> Perguntas Frequentes</h3>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> O que é o cpuminer-multi e para que serve?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>O cpuminer-multi é um minerador de criptomoedas baseado em CPU, originalmente desenvolvido por tpruvot e adaptado pelo @CanalQb para oferecer mais estabilidade, menor consumo de hardware e documentação em português. Ele implementa o algoritmo CryptoNight, que foi projetado para ser resistente a ASICs — ou seja, permite que CPUs comuns (Intel, AMD) participem da mineração de moedas como Monero (XMR) e suas derivadas. Diferente de mineradores genéricos, esta versão inclui controles finos de prioridade do processo (nice 19), throttle para reduzir uso de CPU em desktops e fixação de threads a núcleos específicos (affinity). O projeto é open source sob licença GPLv2 e pode ser compilado em Linux, Windows (via MSYS2) e Docker. O foco principal é educacional: demonstrar na prática como a mineração em CPU funciona, os desafios de concorrência e memória, e como otimizar o aproveitamento de hardware sem comprometer o uso normal do computador.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> Quais moedas posso minerar com CryptoNight?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>O CryptoNight é a família de algoritmos de proof-of-work que foi originalmente usada pelo Monero (XMR) antes da migração para RandomX em 2019. Apesar dessa transição, várias moedas menores e testnets continuam usando variantes do CryptoNight, como Aeon (AEON), Wownero (WOW) e algumas moedas de nicho focadas em privacidade. Além disso, o cpuminer-multi pode ser usado em redes de teste ou moedas baseadas em forks do Monero que mantiveram o CryptoNight como algoritmo. O minerador se conecta a qualquer pool que aceite o protocolo stratum (formato tcp://pool:porta) e negocia automaticamente a variante do algoritmo. É importante verificar junto à pool qual variante do CryptoNight está sendo usada (v0, v1, v2) para garantir compatibilidade. Moedas como Bitcoin (SHA-256d), Ethereum (Ethash) ou tokens ERC-20/BEP-20 não são mineráveis com este software — cada uma exige hardware e algoritmos específicos.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> Por que não consigo minerar Bitcoin com este minerador?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>Bitcoin utiliza o algoritmo SHA-256d (dupla aplicação de SHA-256), que é extremamente eficiente em hardware ASIC (Application-Specific Integrated Circuit). Um ASIC moderno como o Antminer S19 faz cerca de 100 trilhões de hashes por segundo (100 TH/s). Um processador Core i9 topo de linha, rodando SHA-256d, entrega aproximadamente 10 a 20 milhões de hashes por segundo (10-20 MH/s) — uma diferença de <strong>10 milhões de vezes</strong>. Na prática, minerar Bitcoin com CPU não encontraria um bloco sequer em milhares de anos. O cpuminer-multi implementa exclusivamente o algoritmo CryptoNight, que foi criado exatamente para ser resistente a ASICs, nivelando o campo entre CPUs, GPUs e hardware especializado. Por isso, Bitcoin está fora do escopo deste projeto. Para minerar Bitcoin, é necessário investir em hardware ASIC e usar software como o Braiins OS ou o firmware de fábrica do próprio equipamento. O cpuminer-multi é uma ferramenta educacional e prática para moedas baseadas em CryptoNight, não para a rede Bitcoin.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> Como reduzir ainda mais o consumo de CPU durante a mineração?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>O cpuminer-multi oferece três mecanismos principais para controle de consumo. O primeiro é a opção <code>--priority</code>, que define a prioridade das threads do minerador no sistema operacional. O valor padrão é 19 (a menor prioridade possível no Linux), o que significa que o minerador só recebe tempo de CPU quando nenhum outro processo precisa. Em sistemas Unix, isso equivale a rodar com <code>nice 19</code>. O segundo mecanismo é o <code>--throttle</code>, que aceita um valor em milissegundos (0 a 100). Cada thread, após calcular um hash, dorme por esse período. Um throttle de 10 ms reduz o consumo de CPU em cerca de 30% com impacto pequeno no hashrate. O terceiro é <code>--no-affinity</code>, que desliga a fixação de threads a núcleos específicos. Em notebooks com thermal throttling, isso permite que o sistema operacional distribua as threads de forma mais dinâmica, evitando picos de temperatura. Para uso em desktop durante o trabalho, recomenda-se <code>--priority=19 --throttle=10</code>. Para servidores dedicados, <code>--priority=10 --throttle=0</code> oferece bom equilíbrio entre desempenho e impacto no sistema.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> O que fazer se o hashrate estiver muito baixo?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>Hashrate baixo pode ter várias causas. A primeira e mais comum é o <strong>thermal throttling</strong>: quando a CPU superaquece, ela reduz a frequência para se proteger. Monitore a temperatura com <code>sensors</code> (Linux) ou HWMonitor (Windows) e mantenha abaixo de 80&deg;C. A segunda causa é concorrência com outros processos: feche navegadores pesados, IDEs e aplicativos em segundo plano. Use <code>--priority=19</code> para garantir que o minerador não atrapalhe, mas lembre-se de que prioridade baixa significa menos tempo de CPU. A terceira causa é compilação sem otimizações: sempre compile com <code>CFLAGS="-O2 -march=native"</code> para ativar instruções AES-NI e outras otimizações da sua CPU. A quarta causa é throttle muito alto: se você definiu <code>--throttle</code> acima de 20, o hashrate cai significativamente. Para testes de desempenho, use <code>--throttle=0</code>. Por fim, verifique se a pool está respondendo: algumas pools variam a dificuldade dinamicamente, o que pode dar a impressão de hashrate baixo nas primeiras horas. Execute o minerador por pelo menos 30 minutos antes de avaliar a média.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> É seguro minerar no meu computador principal?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>Sim, desde que você tome alguns cuidados. O cpuminer-multi é um software de código aberto (GPLv2), auditável e sem componentes ocultos. O código não contém keyloggers, miners ocultos ou qualquer funcionalidade maliciosa — você mesmo compila o binário a partir do código-fonte. Os riscos reais são elétricos e térmicos: mineração em CPU aumenta o consumo de energia e a temperatura do processador. Em um desktop com bom resfriamento (cooler adequado, pasta térmica em dia), rodar o minerador com <code>--priority=19 --throttle=10</code> é seguro 24/7. Em notebooks, o risco é maior devido ao resfriamento limitado — recomenda-se monitorar a temperatura a cada 30 minutos na primeira hora. O maior risco indireto é financeiro: você pode gastar mais em eletricidade do que ganha em moedas, especialmente se a cotação estiver baixa. Use uma calculadora de lucratividade (como whattomine.com) antes de começar. O @CanalQb recomenda tratar a mineração em CPU como aprendizado, não como fonte de renda. Para uso educacional, configure o minerador para enviar os hashes para uma pool de teste ou para a rede de testes (testnet) da moeda escolhida.</p>
+      </div>
+    </div>
+
+    <div class="post_cqb_faq_item">
+      <button class="post_cqb_faq_question" onclick="post_cqb_toggleFaq(this)">
+        <span><i class="fas fa-chevron-down"></i> Como configurar o minerador para iniciar automaticamente?</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="post_cqb_faq_answer">
+        <p>Para iniciar o minerador automaticamente ao ligar o computador, você pode configurá-lo como serviço no Linux ou como tarefa agendada no Windows. No Linux com systemd, crie o arquivo <code>/etc/systemd/system/cpuminer.service</code> com o conteúdo: <code>[Unit] Description=cpuminer-multi CryptoNight Miner After=network.target [Service] ExecStart=/caminho/para/cpuminer -a cryptonight -o stratum+tcp://pool:port -u WALLET -p x --priority=19 --throttle=5 Restart=always User=seu_usuario [Install] WantedBy=multi-user.target</code>. Depois execute <code>sudo systemctl enable --now cpuminer.service</code>. No Windows, use o Agendador de Tarefas: crie uma tarefa básica com gatilho "Ao iniciar o computador", ação "Iniciar um programa" apontando para o <code>cpuminer.exe</code> com os argumentos desejados. Marque "Executar mesmo quando o usuário não estiver logado" e "Executar com maiores privilégios" se necessário. Lembre-se de que o minerador precisa de conexão com a internet, então defina uma dependência de rede se possível. Em ambos os casos, o arquivo de configuração JSON (<code>example-cfg.json</code>) pode ser usado com a opção <code>--config=arquivo.json</code> para evitar expor a wallet na linha de comando.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post_cqb_footer">
+    <h3><i class="fas fa-code-branch"></i> cpuminer-multi @CanalQb</h3>
+    <p>Repositório oficial com código-fonte, documentação em português e tutoriais:</p>
+    <p>
+      <i class="fas fa-github"></i>
+      <a href="https://github.com/canalqb/cpuminer-multi" target="_blank" rel="noopener noreferrer">
+        <strong>https://github.com/canalqb/cpuminer-multi</strong>
+      </a>
+    </p>
+    <p style="font-size:0.92rem;color:#b0bec5;">
+      <i class="fas fa-book"></i> Leia o <a href="https://github.com/canalqb/cpuminer-multi/blob/main/TUTORIAL.md" target="_blank" rel="noopener noreferrer">Tutorial Completo</a>
+      &middot;
+      <i class="fas fa-play-circle"></i> <a href="https://www.youtube.com/channel/UCdOA_1KzXHIp3gmVyyYv2sg" target="_blank" rel="noopener noreferrer">YouTube @CanalQb</a>
+    </p>
+    <a class="post_cqb_cta_btn" href="https://github.com/canalqb/cpuminer-multi" target="_blank" rel="noopener noreferrer">
+      <i class="fas fa-download"></i> Acessar o Projeto
+    </a>
+  </div>
+
+</div>
+
+<!-- JSON-LD: FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "O que é o cpuminer-multi e para que serve?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "O cpuminer-multi é um minerador de criptomoedas baseado em CPU, originalmente desenvolvido por tpruvot e adaptado pelo @CanalQb para oferecer mais estabilidade, menor consumo de hardware e documentação em português. Ele implementa o algoritmo CryptoNight, que foi projetado para ser resistente a ASICs, permitindo que CPUs comuns participem da mineração de moedas como Monero (XMR) e suas derivadas. Esta versão inclui controles finos de prioridade do processo (nice 19), throttle para reduzir uso de CPU em desktops e fixação de threads a núcleos específicos (affinity)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Quais moedas posso minerar com CryptoNight?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "O CryptoNight é a família de algoritmos de proof-of-work que foi originalmente usada pelo Monero (XMR) antes da migração para RandomX. Várias moedas menores e testnets continuam usando variantes do CryptoNight, como Aeon (AEON) e Wownero (WOW). O minerador se conecta a qualquer pool que aceite o protocolo stratum e negocia automaticamente a variante do algoritmo. Bitcoin (SHA-256d), Ethereum (Ethash) ou tokens ERC-20/BEP-20 não são mineráveis com este software."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Por que não consigo minerar Bitcoin com este minerador?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bitcoin utiliza o algoritmo SHA-256d, que é extremamente eficiente em hardware ASIC. Um ASIC moderno faz cerca de 100 trilhões de hashes por segundo, enquanto um CPU topo de linha entrega aproximadamente 10-20 milhões de hashes por segundo — uma diferença de 10 milhões de vezes. Minerar Bitcoin com CPU não encontraria um bloco em milhares de anos. O cpuminer-multi implementa exclusivamente CryptoNight, criado para ser resistente a ASICs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Como reduzir ainda mais o consumo de CPU durante a mineração?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "O cpuminer-multi oferece três mecanismos: --priority (define a prioridade das threads, padrão 19 a menor prioridade), --throttle (insere uma pausa em ms entre ciclos de hash, 10ms reduz ~30% do consumo), e --no-affinity (desliga fixação de threads a núcleos, útil em notebooks com thermal throttling). Para desktop durante o trabalho, recomenda-se --priority=19 --throttle=10."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "O que fazer se o hashrate estiver muito baixo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Hashrate baixo pode ter várias causas: thermal throttling (monitore temperatura com sensors ou HWMonitor, mantenha abaixo de 80°C), concorrência com outros processos (feche apps pesados), compilação sem otimizações (use CFLAGS=\"-O2 -march=native\"), throttle muito alto (acima de 20 reduz significativamente), ou pool lenta. Execute o minerador por pelo menos 30 minutos antes de avaliar a média."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "É seguro minerar no meu computador principal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim, desde que tome cuidados. O cpuminer-multi é código aberto (GPLv2), auditável e sem componentes maliciosos. Os riscos reais são elétricos e térmicos: monitore a temperatura, especialmente em notebooks. O maior risco indireto é financeiro — você pode gastar mais em eletricidade do que ganha. O uso recomendado é educacional, não como fonte de renda."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Como configurar o minerador para iniciar automaticamente?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No Linux com systemd, crie um arquivo de serviço em /etc/systemd/system/cpuminer.service com ExecStart apontando para o binário e ative com sudo systemctl enable --now. No Windows, use o Agendador de Tarefas com gatilho 'Ao iniciar o computador' e ação 'Iniciar um programa'. Use o arquivo de configuração JSON (--config=arquivo.json) para evitar expor a wallet na linha de comando."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- JSON-LD: BlogPosting -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "cpuminer-multi: Mine CryptoNight com Baixo Consumo de CPU",
+  "description": "Guia completo do cpuminer-multi adaptado pelo @CanalQb: mineração CryptoNight com baixo consumo de CPU, correções de bugs, Dockerfile otimizado e documentação em português.",
+  "image": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgAppgdjbwBxn27tGUch6DJBXRrlOAwk1V0ZTtHvEvlt0HoVsARJSfJDizdDRlmkLwKSxSRzbknK5L3jVKs364oRzgozNeD0Vv2aky1vk2QzrJh-O_sgDQEUXJxw5XHtmFNsmI5iv_ITOJcDfW7k6XtoTE9RgJiKZDW6ZTK41oAjDh7smDJMTC9E1h4YOfm/s2560/CanalQb.png",
+  "url": "https://github.com/canalqb/cpuminer-multi",
+  "datePublished": "2025-01-01",
+  "dateModified": "2025-01-01",
+  "author": {
+    "@type": "Person",
+    "name": "CanalQb",
+    "url": "https://www.youtube.com/channel/UCdOA_1KzXHIp3gmVyyYv2sg"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "CanalQb",
+    "url": "https://www.youtube.com/channel/UCdOA_1KzXHIp3gmVyyYv2sg"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://github.com/canalqb/cpuminer-multi"
+  }
+}
+</script>
+
+<!-- @CanalQb - Exclusive Design License 2026 -->
+
+<script>
+(function() {
+  'use strict';
+  window.post_cqb_toggleFaq = function(btn) {
+    var answer = btn.nextElementSibling;
+    if (answer.classList.contains('open')) {
+      answer.classList.remove('open');
+      btn.classList.remove('active');
+    } else {
+      answer.classList.add('open');
+      btn.classList.add('active');
+    }
+  };
+})();
+</script>

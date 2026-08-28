@@ -1,13 +1,26 @@
 {
-	"_comment1" : "Any long-format command line argument ",
-	"_comment2" : "may be used in this JSON configuration file",
+	"_comment1" : "Arquivo de configuração de exemplo do cpuminer-multi (@CanalQb)",
+	"_comment2" : "Qualquer argumento de linha de comando no formato longo",
+	"_comment3" : "pode ser usado aqui. Ex.: \"threads\", \"url\", \"user\", \"pass\".",
+	"_comment4" : "IMPORTANTE: este build suporta SOMENTE o algoritmo cryptonight.",
+	"_comment5" : "Para outros algoritmos (sha256d, scrypt, etc.) use outro minerador.",
+	"_comment6" : "O valor de cada opção deve ser uma STRING (entre aspas).",
 
-	"url" : "http://127.0.0.1:9332/",
-	"user" : "rpcuser",
-	"pass" : "rpcpass",
+	"url" : "stratum+tcp://SEU_POOL.com:PORT",
+	"user" : "SUA_CARTEIRA.trabalhador",
+	"pass" : "x",
 
-	"algo" : "scrypt",
+	"algo" : "cryptonight",
 	"threads" : "4",
+
+	"_comment7" : "Controle de consumo de hardware:",
+	"_comment8" : "  threads    -> quantos núcleos de CPU usar (default: núcleos - 1)",
+	"_comment9" : "  priority   -> nice de 0 (mais CPU) a 19 (menos CPU). Default: 19",
+	"_comment10" : "  throttle   -> pausa em microssegundos entre hashes. 0 = off",
+	"_comment11" : "  no-affinity -> true desliga o pinning automático dos threads",
+
+	"priority" : "19",
+	"throttle" : "0",
 
 	"quiet" : true
 }
