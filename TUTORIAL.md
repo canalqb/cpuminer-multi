@@ -206,11 +206,41 @@ A flag `-B` faz o processo rodar em segundo plano (daemon).
 
 ### Passo 3.5: Minerar Nerva (XNV) solo (sem pool)
 
-Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso:
+Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso.
 
-1. Baixe o pacote oficial em https://nerva.one/#downloads (v0.3.0.0+).
-2. Extraia o `nervad.exe` e o `nerva-wallet-rpc.exe` numa pasta irmã (ex.: `nerva-windows-x64-v0.3.0.0`) ou cole na pasta do projeto.
-3. Rode:
+#### Onde instalar os arquivos da Nerva
+
+Os comandos da Nerva precisam de dois executáveis do pacote oficial (baixe **um** pacote em https://nerva.one/#downloads, v0.3.0.0+ — os dois vêm juntos):
+
+| Arquivo | Para que serve |
+|---------|----------------|
+| `nervad.exe` | Daemon da Nerva — sincroniza a blockchain e faz a mineração SOLO |
+| `nerva-wallet-rpc.exe` | Consulta de saldo (importa as chaves privadas da carteira) |
+
+O `minerar.py` procura esses executáveis em **3 lugares, nesta ordem**:
+
+1. **Na pasta do projeto** — cole os arquivos em `cpuminer-multi/` (mesma pasta do `minerar.py`):
+   ```
+   cpuminer-multi/
+   ├── minerar.py
+   ├── nervad.exe
+   └── nerva-wallet-rpc.exe
+   ```
+2. **No PATH do sistema** — se os executáveis já estiverem acessíveis pelo terminal.
+3. **Em uma pasta irmã que comece com `nerva-`** — o local mais comum, pois o pacote baixado já vem assim:
+   ```
+   github/
+   ├── cpuminer-multi/              ← projeto (minerar.py aqui)
+   └── nerva-windows-x64-v0.3.0.0/  ← pasta irmã com nervad.exe e nerva-wallet-rpc.exe
+   ```
+   Basta deixar a pasta extraída ao lado do projeto — o script a encontra sozinho.
+
+> Se o script não encontrar os arquivos, ele imprime na tela exatamente onde colocar. Na dúvida, copie os dois `.exe` para dentro de `cpuminer-multi/`.
+
+#### Rodar
+
+1. Baixe e extraia o pacote oficial (veja acima onde colocar).
+2. Rode:
 
 ```bash
 python minerar.py --nerva

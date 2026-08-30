@@ -326,6 +326,37 @@ O script guarda **moeda, carteira, pool, worker, depósito mínimo para receber 
 >
 > O progresso de sincronização da blockchain (`Synced X/Y …`) é exibido na mesma linha para não poluir o terminal, e a consulta de saldo roda em **segundo plano**: o script mostra o % de sincronização e continua respondendo, exibindo o valor da carteira somente quando a sincronização atinge 100%.
 
+### Onde instalar os arquivos da Nerva
+
+Os comandos da Nerva (`--nerva`, `--nerva --gerar-carteira`, `--saldo`) precisam de dois executáveis do pacote oficial da Nerva:
+
+| Arquivo | Para que serve |
+|---------|----------------|
+| `nervad.exe` | Daemon da Nerva — sincroniza a blockchain e faz a mineração SOLO |
+| `nerva-wallet-rpc.exe` | Consulta de saldo (importa as chaves privadas da carteira) |
+
+> Ambos vêm juntos no mesmo pacote oficial: **https://nerva.one/#downloads** (v0.3.0.0 ou mais novo). Basta baixar e extrair — um único download fornece os dois.
+
+O `minerar.py` procura esses executáveis em **3 lugares, nesta ordem**:
+
+1. **Na pasta do projeto** — cole os arquivos em `cpuminer-multi/` (mesma pasta do `minerar.py`):
+   ```
+   cpuminer-multi/
+   ├── minerar.py
+   ├── nervad.exe          ← copie aqui (ou na opção 3)
+   └── nerva-wallet-rpc.exe
+   ```
+2. **No PATH do sistema** — se os executáveis já estiverem acessíveis pelo terminal.
+3. **Em uma pasta irmã que comece com `nerva-`** — o local mais comum, já que o pacote baixado se chama `nerva-windows-x64-v0.3.0.0`:
+   ```
+   github/
+   ├── cpuminer-multi/              ← projeto (minerar.py aqui)
+   └── nerva-windows-x64-v0.3.0.0/  ← pasta irmã com nervad.exe e nerva-wallet-rpc.exe
+   ```
+   Basta deixar a pasta extraída ao lado do projeto — o script a encontra sozinho, sem copiar nada.
+
+> **Dica:** se o script não encontrar os arquivos, ele imprime na tela exatamente onde colocar (`python minerar.py --nerva` mostra o caminho esperado). Se a pasta irmã não for encontrada, copie os dois `.exe` para dentro de `cpuminer-multi/`.
+
 ---
 
 ## Opções de linha de comando

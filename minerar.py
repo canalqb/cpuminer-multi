@@ -837,10 +837,16 @@ def localizar_nerva_wallet_rpc():
 
 def instrucoes_nerva():
     return (
-        "\nO daemon oficial da Nerva (nervad.exe) não foi encontrado.\n\n"
+        "\nOs executáveis oficiais da Nerva (nervad.exe e nerva-wallet-rpc.exe)\n"
+        "não foram encontrados.\n\n"
         "Baixe o pacote Windows em https://nerva.one/#downloads (v0.3.0.0\n"
-        "ou mais novo) e extraia junto deste projeto, ou apenas copie o\n"
-        "arquivo nervad.exe para a pasta:\n\n    " + PROJETO_DIR + "\n\n"
+        "ou mais novo) e deixe a pasta extraída (ex.: nerva-windows-x64-v0.3.0.0)\n"
+        "ao lado desta pasta do projeto — o script a encontra sozinha:\n\n"
+        "    " + os.path.dirname(PROJETO_DIR) + "\n"
+        "    ├── " + os.path.basename(PROJETO_DIR) + "  (este projeto)\n"
+        "    └── nerva-windows-x64-v0.3.0.0/  ← coloque a pasta extraída aqui\n\n"
+        "Ou, se preferir, copie os dois .exe para dentro desta pasta:\n\n"
+        "    " + PROJETO_DIR + "\n\n"
         "Depois rode este script novamente."
     )
 
@@ -1241,13 +1247,15 @@ def consultar_saldo_nerva(cfg, em_segundo_plano=False):
     if not cfg.get("nerva_spend_key") or not cfg.get("nerva_view_key"):
         print("\n  [aviso] Para consultar o saldo, a config precisa ter as chaves")
         print("          privadas (spend/view). Gere uma carteira com:")
-        print("          python minerar.py --gerar-carteira")
+        print("          python minerar.py --nerva --gerar-carteira")
         return False
 
     binario = localizar_nerva_wallet_rpc()
     if not binario:
-        print("\n  [aviso] nerva-wallet-rpc.exe não encontrado. Baixe o pacote")
-        print("          oficial em https://nerva.one/#downloads (vem junto do nervad).")
+        print("\n  [aviso] nerva-wallet-rpc.exe não encontrado. Ele vem junto")
+        print("          do nervad.exe no pacote oficial (https://nerva.one/#downloads).")
+        print("          Coloque a pasta extraída ao lado deste projeto ou copie")
+        print(f"          os .exe para: {PROJETO_DIR}")
         return False
 
     # O daemon precisa estar de pé para o wallet-rpc sincronizar.
