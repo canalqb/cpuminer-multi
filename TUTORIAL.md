@@ -294,6 +294,8 @@ O script inicia o daemon com `--start-mining`, faz polling do RPC (porta 17566) 
 
 > **Sincronização:** a primeira execução baixa a blockchain (pós-HF13, sync rápido com checkpoints). O daemon só minera de verdade após sincronizar.
 >
+> **Huge Pages (desempenho):** se o log mostrar `normal memory pages, hashrate will be lower`, o hashrate está reduzido. Ative páginas grandes de memória com `python minerar.py --large-pages` (abre o prompt de administrador; no Windows é preciso sair e entrar da sessão depois). Em Linux: `sudo sysctl -w vm.nr_hugepages=128`. O script também avisa automaticamente assim que o daemon emite essa mensagem.
+>
 > **Problema de DNS:** em algumas redes o daemon não consegue resolver os seeds via DNS-over-TCP próprio. O script já contorna isso adicionando `--add-peer` com os IPs dos seeds oficiais automaticamente.
 >
 > **Progresso compacto:** as linhas `Synced X/Y (Z%, W left)` do daemon aparecem na mesma linha (sobrescrevendo a anterior), para não encher o terminal.

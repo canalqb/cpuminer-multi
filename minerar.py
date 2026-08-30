@@ -898,7 +898,61 @@ def instrucoes_nerva():
     )
 
 
-def montar_comando(binario, cfg, args):
+def aviso_large_pages(nova_linha=False):
+    """Aviso exibido quando o nervad reporta 'Mining is running on normal
+    memory pages, hashrate will be lower' — enorme pages (2 MB) não estão
+    habilitadas, o que reduz o hashrate do CryptoNight-Adaptive v6."""
+    sep = "\n" if nova_linha else " "
+    print(sep + "-" * 64)
+    print("  AVISO — HUGE PAGES DESATIVADAS (hashrate menor)")
+    print("-" * 64)
+    print("  O nervad está usando páginas de memória NORMais (4 KB). O")
+    print("  CryptoNight-Adaptive v6 é pesado em memória (scratchpad de")
+    print("  8 MB) e com huge pages (2 MB) o hashrate sobe bastante.")
+    print()
+    if os.name == "nt":
+        print("  Como ativar no WINDOWS:")
+        print("    1) Abra o PowerShell/terminal como Administrador")
+        print("    2) Rode uma vez:")
+        print(f'       "{localizar_nervad() or NERVA_BIN_WIN}" --setup-large-pages')
+        print("    3) Saia da sessão do Windows e entre de novo")
+        print("    4) Reinicie a mineração (python minerar.py)")
+        print()
+        print("  Dica: você pode rodar o passo 2 direto daqui:")
+        print("       python minerar.py --large-pages")
+    else:
+        print("  Como ativar no LINUX:")
+        print("    sudo sysctl -w vm.nr_hugepages=128   (2 MB x 128 = 256 MB)")
+        print("    # e mantenha o transparent hugepages habilitado:")
+        print("    sudo sysctl -w vm.max_map_count=65530")
+        print("    # depois reinicie o minerador")
+    print("-" * 64)
+
+
+def executar_large_pages_nerva():
+    """Aplica o setup de huge pages do nervad (requer elevação de admin no
+    Windows). No Windows dispara o prompt UAC; no Linux mostra as instruções."""
+    binario = localizar_nervad()
+    if not binario:
+        print(instrucoes_nerva(), file=sys.stderr)
+        return 2
+    if os.name == "nt":
+        print(f"[minerar.py] Executando: {binario} --setup-large-pages")
+        print("[minerar.py] Confirme o prompt de Administrador (UAC) que vai abrir.\n")
+        try:
+            subprocess.run(
+                ["powershell.exe", "-NoProfile", "-Command",
+                 f"Start-Process -FilePath '{binario}' -ArgumentList "
+                 "'--setup-large-pages' -Verb RunAs -Wait"],
+                check=False)
+        except Exception as e:
+            print(f"[minerar.py] Falha ao executar: {e}", file=sys.stderr)
+            return 1
+        print("\n[OK] Comando enviado. Se o prompt foi aceito, SAIA e entre")
+        print("     de novo no Windows e reinicie a mineração.")
+        return 0
+    aviso_large_pages()
+    return 1
     cmd = [binario]
 
     if args.benchmark:
@@ -1116,8 +1170,17 @@ def executar(binario, cmd, stats=None):
     # nesse caso, antes de escrever uma linha normal, quebra a linha
     # para não colar no final do \r.
     _ultima_foi_sync = False
+    _avisou_large_pages = False
     try:
         for linha in proc.stdout:
+            # Aviso de huge pages desativadas: exibe as instruções uma vez
+            # (evita repetir a cada linha do daemon).
+            if (not _avisou_large_pages
+                    and ("normal memory pages" in linha
+                         or "hashrate will be lower" in linha)):
+                _avisou_large_pages = True
+                aviso_large_pages(nova_linha=True)
+                _ultima_foi_sync = False
             # Linhas de sincronização do nervad ("Synced X/Y (Z%, W left)")
             # são exibidas na mesma linha com \r, em vez de uma linha nova
             # a cada segundo — evita poluir o terminal.
@@ -1713,6 +1776,7 @@ def main():
                "  python minerar.py --nerva        # minera Nerva (XNV) solo com nervad.exe\n"
                "  python minerar.py --nerva --gerar-carteira   # gera carteira Nerva\n"
                "  python minerar.py --saldo        # saldo da carteira Nerva salva\n"
+               "  python minerar.py --large-pages  # ativa huge pages do nervad (admin)\n"
                "  python minerar.py -t 2 --throttle 2000   # ajusta no run atual\n",
     )
     parser.add_argument(
@@ -1782,6 +1846,10 @@ def main():
              "(precisa das chaves e do daemon sincronizado).",
     )
     parser.add_argument(
+        "--large-pages", action="store_true",
+        help="Ativa huge pages do nervad (nervad --setup-large-pages, pede admin).",
+    )
+    parser.add_argument(
         "--extra", nargs=argparse.REMAINDER,
         help="Argumentos adicionais passados direto ao minerd (depois de --).",
     )
@@ -1803,6 +1871,10 @@ def main():
             and not args.show and not args.benchmark:
         if garantir_daemon_nerva():
             print("  [minerar.py] Daemon Nerva carregado em segundo plano.\n")
+
+    # --large-pages: ativa huge pages do nervad (pede admin) e sai
+    if args.large_pages:
+        sys.exit(executar_large_pages_nerva())
 
     # --show: só exibe e sai
     if args.show:
