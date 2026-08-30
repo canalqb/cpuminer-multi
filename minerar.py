@@ -1190,6 +1190,8 @@ PAGINA_HTML = """<!DOCTYPE html>
     <div class="card"><div class="label">Altura (bloco)</div><div class="valor" id="height">—</div></div>
     <div class="card"><div class="label">Dificuldade</div><div class="valor" id="difficulty">—</div></div>
     <div class="card"><div class="label">Sincronizado</div><div class="valor" id="synced">—</div></div>
+    <div class="card"><div class="label">Saldo total</div><div class="valor" id="saldo">—</div></div>
+    <div class="card"><div class="label">Saldo disponível</div><div class="valor" id="saldo_ub">—</div></div>
   </div>
   <footer>Produto do CanalQB — <a href="https://canalqb.com.br">canalqb.com.br</a></footer>
 <script>
@@ -1199,7 +1201,7 @@ async function atualizar() {
     const s = await r.json();
     const campos = ['coin','hashrate','accepted','rejected','aceite_pct','uptime',
                     'pool','payout_min','address','worker','algo','threads',
-                    'height','difficulty','synced'];
+                    'height','difficulty','synced','saldo','saldo_ub'];
     for (const k of campos) {
       const el = document.getElementById(k);
       if (el && s[k] !== undefined && s[k] !== null && s[k] !== '') el.textContent = s[k];

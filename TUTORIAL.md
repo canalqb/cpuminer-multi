@@ -290,7 +290,7 @@ Na primeira vez ele pergunta o endereço da carteira, threads, etc. e salva a co
 >
 > O script aceita a spend key em **hex** (64 caracteres) ou **inteiro decimal**, ajusta com zeros à esquerda e deriva o endereço real + chaves pública/privada. Ele pergunta se você quer salvar na config, consultar o saldo e iniciar a mineração.
 
-O script inicia o daemon com `--start-mining`, faz polling do RPC (porta 17566) e mostra hashrate/altura/dificuldade no terminal a cada 60s. Durante a sincronização o relógio mostra `altura X/Y (Z%)`; depois de sincronizar, se as chaves privadas estiverem na config, o **saldo ao vivo** é exibido na mesma linha. O `--dashboard` funciona também para Nerva. Se o daemon encerrar com erro, o script lista as causas comuns (porta em uso, endereço inválido, rede).
+O script inicia o daemon com `--start-mining`, faz polling do RPC (porta 17566) e mostra hashrate/altura/dificuldade no terminal a cada 60s. Durante a sincronização o relógio mostra `altura X/Y (Z%)`; depois de sincronizar, se as chaves privadas estiverem na config, o **saldo ao vivo** é exibido na mesma linha. O `--dashboard` também funciona para Nerva e mostra o saldo (total e disponível) no painel web. Se o daemon encerrar com erro, o script lista as causas comuns (porta em uso, endereço inválido, rede).
 
 > **Sincronização:** a primeira execução baixa a blockchain (pós-HF13, sync rápido com checkpoints). O daemon só minera de verdade após sincronizar.
 >
