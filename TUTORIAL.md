@@ -206,7 +206,11 @@ A flag `-B` faz o processo rodar em segundo plano (daemon).
 
 ### Passo 3.5: Minerar Nerva (XNV) solo (sem pool)
 
-Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso com o flag `--nerva`.
+Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo com o flag `--nerva`.
+
+> **ATENÇÃO:** o `minerd.exe` (cpuminer-multi) **NÃO minera Nerva**. A Nerva usa **CryptoNight-Adaptive v6 (CNA v6)** desde o Hard Fork 13 (Julho/2026): 8 MiB de scratchpad + programa aleatório por bloco + acesso a memória dependente. O `minerd` deste projeto só implementa **CryptoNight v0** (2 MiB, fixo). Os algoritmos são **incompatíveis**.
+>
+> Todo o hashrate para Nerva vem do **`nervad.exe`** com `--start-mining`. O daemon sincroniza a blockchain E minera ao mesmo tempo. O `minerar.py` configura threads, afinidade e prioridade no próprio daemon.
 
 ### Passo 3.6: Minerar outras moedas CryptoNight via pool
 

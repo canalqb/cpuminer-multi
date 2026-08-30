@@ -19,9 +19,9 @@ Uso:
     python minerar.py --dashboard    # abre painel web local (http://localhost:8080)
 
 Moedas suportadas (cada uma tem um flag próprio):
-    python minerar.py --nerva        # Nerva (XNV)  — SOLO, com o nervad.exe
-    python minerar.py --etn          # Electroneum (ETN) — pool, com o minerd
-    python minerar.py --xmc          # Monero Classic (XMC) — pool, com o minerd
+    python minerar.py --nerva        # Nerva (XNV)  — SOLO, com o nervad.exe (CNA v6)
+    python minerar.py --etn          # Electroneum (ETN) — pool, com o minerd (CN v0)
+    python minerar.py --xmc          # Monero Classic (XMC) — pool, com o minerd (CN v0)
 
 Sem flag, o script pergunta QUAL moeda minerar na primeira configuração.
 
@@ -715,15 +715,17 @@ def configurar(coin_fixa=None):
         sugestao_payout(cfg["coin"]))
 
     # Moedas SOLO (Nerva) = mineração com o daemon oficial (nervad). Não
-    # existe pool e o minerd NÃO roda XNV — pede só o essencial e pula os
-    # campos de pool (url, worker, pass, etc.).
+    # existe pool e o minerd NÃO roda XNV — o algoritmo da Nerva (CryptoNight-
+    # Adaptive v6, 8 MiB) é diferente do CryptoNight v0 (2 MiB) do minerd.
+    # Todo o hashrate vem do nervad: use TODAS as threads nele.
     if eh_solo(cfg["coin"]):
-        print("\n[aviso] Nerva (XNV) é mineração SOLO — não existe pool. O script")
-        print("        usa o daemon oficial nervad.exe (CryptoNight-Adaptive v6).")
+        print("\n[aviso] Nerva (XNV) é mineração SOLO — não existe pool.")
+        print("        O algoritmo é o CryptoNight-Adaptive v6 (8 MiB), que o")
+        print("        minerd NÃO suporta: todo o hashrate sai do nervad.exe.")
         print("        Baixe o pacote em https://nerva.one/#downloads se pedir.\n")
         cfg["address"] = perguntar_endereco_nerva(cfg)
         cfg["nerva_threads"] = perguntar_int(
-            f"Quantas threads de CPU para minerar? (sua máquina tem {cores} núcleos)",
+            f"Quantas threads de CPU para o nervad minerar? (sua máquina tem {cores} núcleos)",
             max(1, cores - 1), minimo=1, maximo=cores)
         cfg["nerva_affinity"] = perguntar_sn(
             "Fixar threads nos núcleos físicos? (recomendado)", "s")
@@ -927,7 +929,12 @@ def args_sync_nerva():
 
 
 def montar_comando_nerva(binario, cfg, args):
-    """Comando para o daemon oficial Nerva: sync + mineração solo (sem pool)."""
+    """Comando para o daemon oficial Nerva: sync + mineração solo (sem pool).
+
+    Atenção: o minerd NÃO minera Nerva. A Nerva usa CryptoNight-Adaptive v6
+    (8 MiB de scratchpad + programa aleatório), incompatível com o CryptoNight
+    v0 (2 MiB) do minerd. Todo o hashrate vem do nervad: o número de threads
+    informado aqui é usado 100% pelo nervad (--mining-threads)."""
     threads = args.threads if args.threads is not None else cfg.get("nerva_threads", 1)
     cmd = [binario,
            "--data-dir", NERVA_DATA_DIR,

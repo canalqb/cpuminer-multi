@@ -49,6 +49,7 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 - ❌ **Não minera Litecoin, Dogecoin, Ethereum** — são algoritmos diferentes (scrypt, ethash, etc.).
 - ❌ **Não minera tokens ERC-20/BEP-20** — tokens não são minerados (veja o TUTORIAL).
 - ❌ **Não conversa com pools de stratum padrão** (ex.: pools de BTC/LTC). Este fork é limitado a JSON-RPC 2.0.
+- ❌ **Não minera Nerva (XNV) com o `minerd`** — a Nerva usa CryptoNight-Adaptive v6 (incompatível com o CryptoNight v0 do `minerd`). A mineração Nerva é feita exclusivamente pelo daemon oficial `nervad.exe` (solo, sem pool).
 
 > 👉 Para moedas fora do CryptoNight, veja a seção [“Como minerar outras moedas”](TUTORIAL.md#como-minerar-outras-moedas-e-tokens) no tutorial.
 
@@ -79,7 +80,7 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 - `autogen.sh` agora usa `autoreconf -fi` (mais robusto) com fallback manual.
 
 ### Mineração Nerva (XNV) solo e carteira
-- **Suporte oficial à Nerva (XNV)** — moeda solo, sem pool, via daemon oficial `nervad.exe`. O script detecta o binário (pasta do projeto ou irmã `nerva-*`), sobe o daemon, espera sincronizar e mostra hashrate/altura/dificuldade ao vivo.
+- **Suporte oficial à Nerva (XNV)** — moeda solo, sem pool, via daemon oficial `nervad.exe`. **Atenção: o `minerd` (cpuminer) NÃO minera Nerva** — a Nerva usa CryptoNight-Adaptive v6 (8 MiB de scratchpad + programa aleatório), incompatível com o CryptoNight v0 (2 MiB) do `minerd`. Todo o hashrate sai do `nervad` com `--start-mining`. O script detecta o binário (pasta do projeto ou irmã `nerva-*`), sobe o daemon, espera sincronizar e mostra hashrate/altura/dificuldade ao vivo.
 - **Geração de carteira real** (`--nerva --gerar-carteira`) — a partir da spend private key (hex ou inteiro decimal), deriva as chaves pública/privada e gera o endereço Nerva correto.
 - **Consulta de saldo** (`--saldo`) — usa o `nerva-wallet-rpc` para importar as chaves privadas (a Nerva é privada; não dá para consultar só pelo endereço). Roda em **segundo plano**: mostra o % de sincronização e o valor aparece quando atinge 100%.
 - **Contorno de DNS dos seeds** — em redes onde o daemon não resolve os seeds via DNS-over-TCP próprio, o script adiciona `--add-peer` com os IPs oficiais automaticamente.
