@@ -38,7 +38,6 @@ import shutil
 import signal
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import urllib.request
@@ -60,6 +59,8 @@ NERVA_DATA_DIR = os.path.join(PROJETO_DIR, "nerva-data")  # blockchain local
 # para contornar falha do DNS-over-TCP do daemon em algumas redes).
 NERVA_SEED_PEERS = ["74.208.52.101:17565", "185.23.5.186:17565"]
 NERVA_WALLET_RPC_PORT = 17568  # porta RPC para consulta de saldo (nerva-wallet-rpc; 17567 é usada pelo nervad)
+# Pasta fixa para a carteira de consulta de saldo (dentro de nerva-data/ que é gitignored)
+NERVA_SALDO_DIR = os.path.join(NERVA_DATA_DIR, "wallet_saldo")
 
 DEFAULT_PASS = "x"
 DEFAULT_PRIORITY = 19
@@ -1104,6 +1105,20 @@ WALLET_RPC_PROC = None
 WALLET_RPC_TMPDIR = None
 
 
+def limpar_residuos_saldo_nerva():
+    """Apaga pastas `nerva_saldo_*` órfãs deixadas por versões antigas do
+    script (quando a carteira de saldo era criada numa pasta nova a cada
+    execução). Hoje usamos UMA pasta fixa (nerva-data/wallet_saldo), então
+    esses resíduos podem ser removidos com segurança."""
+    try:
+        for nome in os.listdir(PROJETO_DIR):
+            if nome.startswith("nerva_saldo_") and os.path.isdir(os.path.join(PROJETO_DIR, nome)):
+                shutil.rmtree(os.path.join(PROJETO_DIR, nome), ignore_errors=True)
+                print(f"[minerar.py] Removida pasta órfã: {nome}")
+    except OSError:
+        pass
+
+
 def parar_wallet_rpc_fundo():
     """Encerra o nerva-wallet-rpc de fundo (se houver) e remove a pasta
     temporária da carteira. No Windows usa taskkill //F (mais confiável)."""
@@ -1399,7 +1414,11 @@ def consultar_saldo_nerva(cfg, em_segundo_plano=False):
                 return False
             print("  Daemon pronto. Consultando saldo...")
 
-    tmp_dir = tempfile.mkdtemp(prefix="nerva_saldo_", dir=PROJETO_DIR)
+    # Usa UMA pasta fixa (nerva-data/wallet_saldo, gitignored) em vez de
+    # criar nerva_saldo_* a cada execução — evita acúmulo de pastas órfãs.
+    tmp_dir = NERVA_SALDO_DIR
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+    os.makedirs(tmp_dir, exist_ok=True)
     cfg_json = {
         "version": 1,
         "filename": "carteira_saldo",
@@ -1573,7 +1592,10 @@ def poller_saldo_nerva(stats, cfg, porta=NERVA_WALLET_RPC_PORT):
     if WALLET_RPC_PROC is not None and WALLET_RPC_PROC.poll() is None:
         proc = WALLET_RPC_PROC
     else:
-        tmp_dir = tempfile.mkdtemp(prefix="nerva_saldo_", dir=PROJETO_DIR)
+        # Pasta fixa (nerva-data/wallet_saldo) — não acumula nerva_saldo_*
+        tmp_dir = NERVA_SALDO_DIR
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        os.makedirs(tmp_dir, exist_ok=True)
         cfg_json = {
             "version": 1,
             "filename": "carteira_saldo",
@@ -1761,6 +1783,10 @@ def main():
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
+
+    # Limpa pastas nerva_saldo_* órfãs de versões antigas (hoje usamos
+    # uma pasta fixa em nerva-data/wallet_saldo).
+    limpar_residuos_saldo_nerva()
 
     cores = os.cpu_count() or 2
 
