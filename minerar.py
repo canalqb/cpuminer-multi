@@ -268,6 +268,37 @@ def sugestao_payout(coin):
     return m["payout_min"] if m else ""
 
 
+def mostrar_moedas_disponiveis():
+    """Mostra as moedas disponíveis neste minerador e como consultá-las,
+    e faz uma pausa curta (2s) antes de continuar a mineração.
+    Usado na execução padrão `python minerar.py` com config salva."""
+    print("\n" + "=" * 64)
+    print("  MOEDAS DISPONÍVEIS NESTE MINERADOR")
+    print("=" * 64)
+    print("  Modo SOLO : minera direto na rede (sem pool) — Nerva")
+    print("  Modo POOL : minera numa pool (pagamento mais estável)")
+    print("-" * 64)
+    for m in MOEDAS_CRYPTONIGHT:
+        modo = "SOLO" if m["modo"] == "solo" else "POOL"
+        print(f"  • {m['nome']}  [{modo}]")
+        print(f"      {m['algo']} · dificuldade {m['dificuldade'].lower()}"
+              f" · {m['mercado']}")
+        if m["nota"]:
+            print(f"      {m['nota']}")
+        if m["flag"] != "custom":
+            print(f"      Rode: python minerar.py --{m['flag']}")
+    print("-" * 64)
+    print("  Como consultar:")
+    print("    python minerar.py --show         ver a config salva")
+    print("    python minerar.py --setup        trocar de moeda/reconfigurar")
+    print("    python minerar.py --nerva        minerar Nerva (XNV) direto")
+    print("    python minerar.py --saldo        consultar saldo da carteira Nerva")
+    print("    python minerar.py --dashboard    painel web ao vivo")
+    print("=" * 64)
+    print("  Continuando a mineração em 2 segundos...\n")
+    time.sleep(2)
+
+
 def validar_address(address, coin):
     """Validações básicas do endereço — avisos, não bloqueio."""
     if len(address) < 20:
@@ -1773,6 +1804,7 @@ def main():
 
     # Carrega config salva ou constrói a partir de argumentos CLI
     cfg = carregar_config()
+    config_ja_existia = cfg is not None
 
     if cfg is None:
         # Não há config salva. Se o usuário passou um flag de moeda (-o/-u)
@@ -1806,6 +1838,12 @@ def main():
         cfg["address"], _, cfg["worker"] = args.user.partition(".")
     if args.passwd is not None:
         cfg["pass"] = args.passwd
+
+    # Execução padrão (config salva, sem flag de moeda nem override de pool):
+    # mostra as moedas disponíveis e como consultá-las, pausa 2s e continua.
+    if config_ja_existia and moeda_pedida is None \
+            and not args.url and not args.user:
+        mostrar_moedas_disponiveis()
 
     # Solo (Nerva): usa o daemon oficial, não o minerd
     if eh_solo(str(cfg.get("coin", ""))):

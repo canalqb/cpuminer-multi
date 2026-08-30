@@ -295,7 +295,8 @@ Se você tem **Python 3** instalado, o projeto inclui um `minerar.py` que locali
 # pool etc. e salva em minerar.config.json
 python minerar.py
 
-# Nas próximas vezes, é só rodar de novo — a config já está salva
+# Nas próximas vezes, é só rodar de novo — mostra as moedas disponíveis
+# e como consultá-las, espera 2 segundos e continua minerando
 python minerar.py
 
 # Benchmark local (sem pool)
