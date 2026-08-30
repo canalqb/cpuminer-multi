@@ -335,7 +335,7 @@ O script guarda **moeda, carteira, pool, worker, depósito mínimo para receber 
 
 > **Nerva (XNV)** é mineração **solo, sem pool** — o `minerar.py` detecta o `nervad.exe` do pacote oficial (https://nerva.one/#downloads) e roda a mineração sozinho, com status ao vivo (hashrate/altura via RPC do daemon). Durante o setup, digite `g` no campo do endereço para gerar uma carteira real a partir da sua spend key, ou use `python minerar.py --nerva --gerar-carteira`. Para consultar o saldo (a Nerva é privada — não dá para consultar pelo endereço), use `python minerar.py --saldo` com o daemon rodando e sincronizado.
 >
-> O progresso de sincronização da blockchain (`Synced X/Y …`) é exibido na mesma linha para não poluir o terminal, e a consulta de saldo roda em **segundo plano**: o script mostra o % de sincronização e continua respondendo, exibindo o valor da carteira somente quando a sincronização atinge 100%.
+> O progresso de sincronização da blockchain (`Synced X/Y …`) é exibido na mesma linha para não poluir o terminal, e a consulta de saldo roda em **segundo plano**: o script mostra o % de sincronização e continua respondendo, exibindo o valor da carteira somente quando a sincronização atinge 100%. Durante a mineração solo, se as chaves privadas estiverem salvas na config, o **saldo ao vivo** aparece na própria linha de status do relógio (a cada 60s) assim que o daemon sincroniza — sem precisar rodar `--saldo`.
 
 ### Onde instalar os arquivos da Nerva
 

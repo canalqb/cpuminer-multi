@@ -1259,6 +1259,8 @@ def criar_stats(cfg):
         "target_height": "—",
         "difficulty": "—",
         "synced": "—",
+        "saldo": "",          # preenchido pelo poller_saldo_nerva (ao vivo)
+        "saldo_ub": "",
         "inicio": time.time(),
     }
     if eh_solo(str(cfg.get("coin", ""))):
@@ -1483,6 +1485,82 @@ def poller_nerva_rpc(stats, porta=NERVA_RPC_PORT):
         time.sleep(5)
 
 
+def poller_saldo_nerva(stats, cfg, porta=NERVA_WALLET_RPC_PORT):
+    """Sobe o nerva-wallet-rpc em segundo plano (a partir das chaves salvas
+    na config) e, quando o daemon sincronizar, alimenta `stats['saldo']` e
+    `stats['saldo_ub']` — o relógio mostra o saldo ao vivo na mesma linha.
+    Encerrado na saída do script (atexit). Sai cedo se não houver chaves ou
+    se o wallet-rpc não estiver disponível."""
+    global WALLET_RPC_PROC, WALLET_RPC_TMPDIR
+    if not cfg.get("nerva_spend_key") or not cfg.get("nerva_view_key"):
+        return
+    if not localizar_nerva_wallet_rpc():
+        return
+    # O daemon local precisa estar de pé antes de subir a carteira
+    for _ in range(60):  # até ~5 min (a primeira sync do daemon demora)
+        if consultar_rpc("get_info"):
+            break
+        time.sleep(5)
+
+    # Se já há um wallet-rpc de fundo vivo (ex.: vindo de --gerar-carteira
+    # → "Iniciar a mineração agora"), reutiliza em vez de subir um segundo
+    # na mesma porta.
+    if WALLET_RPC_PROC is not None and WALLET_RPC_PROC.poll() is None:
+        proc = WALLET_RPC_PROC
+    else:
+        tmp_dir = tempfile.mkdtemp(prefix="nerva_saldo_", dir=PROJETO_DIR)
+        cfg_json = {
+            "version": 1,
+            "filename": "carteira_saldo",
+            "scan_from_height": 0,
+            "password": "minerar",
+            "viewkey": cfg["nerva_view_key"],
+            "spendkey": cfg["nerva_spend_key"],
+        }
+        with open(os.path.join(tmp_dir, "carteira.json"), "w", encoding="utf-8") as f:
+            json.dump(cfg_json, f)
+
+        binario = localizar_nerva_wallet_rpc()
+        proc = subprocess.Popen(
+            [binario,
+             "--generate-from-json", os.path.join(tmp_dir, "carteira.json"),
+             "--daemon-address", f"127.0.0.1:{NERVA_RPC_PORT}",
+             "--rpc-bind-port", str(porta),
+             "--disable-rpc-login"],
+            cwd=tmp_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        WALLET_RPC_PROC = proc
+        WALLET_RPC_TMPDIR = tmp_dir
+
+    while True:
+        if proc.poll() is not None:
+            return
+        # Só consulta quando o daemon estiver sincronizado — o saldo só
+        # reflete a blockchain toda nesse momento.
+        if consultar_rpc("get_info", NERVA_RPC_PORT).get("synchronized"):
+            corpo = json.dumps({
+                "jsonrpc": "2.0", "id": "0",
+                "method": "get_balance",
+                "params": {"account_index": 0}}).encode("utf-8")
+            req = urllib.request.Request(
+                f"http://127.0.0.1:{porta}/json_rpc",
+                data=corpo, headers={"Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=5) as r:
+                    res = json.load(r).get("result") or {}
+                    bal = res.get("balance")
+                    if bal is not None:
+                        stats["saldo"] = f"{bal / 1e12:,.8f} XNV"
+                        ub = res.get("unlocked_balance")
+                        stats["saldo_ub"] = (f"{ub / 1e12:,.8f} XNV"
+                                             if ub is not None else "")
+            except Exception:
+                pass
+        time.sleep(30)
+
+
 def _progresso_nerva(stats):
     """Percentual de sincronização (0-100) a partir da altura atual vs alvo."""
     h = stats.get("height")
@@ -1499,7 +1577,8 @@ def _progresso_nerva(stats):
 def relogio_nerva(stats):
     """Imprime um resumo periódico no terminal (hashrate/altura da Nerva).
     A primeira linha sai logo (útil durante a sincronização inicial), depois
-    a cada 60s."""
+    a cada 60s. Quando sincronizado e o saldo estiver disponível (via
+    poller_saldo_nerva), mostra o saldo ao vivo na mesma linha."""
     primeiro = True
     while True:
         if not primeiro:
@@ -1510,12 +1589,17 @@ def relogio_nerva(stats):
         if stats.get("synced") == "sim":
             info_sync = "sincronizado"
         elif prog is not None:
-            info_sync = (f"sincronizando… {prog:.1f}% "
-                         f"({stats.get('height', '—')}/{stats.get('target_height', '—')})")
+            info_sync = (f"altura {stats.get('height', '—')}"
+                         f"/{stats.get('target_height', '—')} ({prog:.1f}%)")
         else:
-            info_sync = "sincronizando…"
-        print(f"[minerar.py] XNV solo · {hr:.2f} H/s · altura {stats.get('height', '—')} · "
-              f"diff {stats.get('difficulty', '—')} · {info_sync}", flush=True)
+            info_sync = "altura ? — aguardando a rede"
+        linha = (f"[minerar.py] XNV solo · {hr:.2f} H/s · "
+                 f"diff {stats.get('difficulty', '—')} · {info_sync}")
+        saldo = stats.get("saldo")
+        if saldo:
+            ub = stats.get("saldo_ub")
+            linha += f" · saldo {saldo}" + (f" (desbl. {ub})" if ub else "")
+        print(linha, flush=True)
 
 
 def iniciar_dashboard(cfg, porta=DASHBOARD_PADRAO):
@@ -1576,9 +1660,21 @@ def rodar_com_dashboard(binario, cfg, cmd, args):
     if eh_nerva and stats is not None:
         threading.Thread(target=poller_nerva_rpc, args=(stats,), daemon=True).start()
         threading.Thread(target=relogio_nerva, args=(stats,), daemon=True).start()
+        # Saldo ao vivo na linha do relógio (se as chaves estiverem na config)
+        threading.Thread(target=poller_saldo_nerva, args=(stats, cfg),
+                         daemon=True).start()
 
     try:
-        return executar(binario, cmd, stats) or 0
+        code = executar(binario, cmd, stats) or 0
+        if eh_nerva and code != 0:
+            print("\n[minerar.py] O daemon Nerva encerrou com código "
+                  f"{code}. Causas comuns:")
+            print("  • Porta 17565/17566 já em uso — há outro nervad.exe")
+            print("    rodando? Encerre-o e rode de novo.")
+            print("  • Endereço de carteira inválido na config — rode:")
+            print("      python minerar.py --setup --nerva")
+            print("  • Rede bloqueando o p2p — tente sem o proxy/DNS.")
+        return code
     finally:
         if srv:
             try:
