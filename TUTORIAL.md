@@ -38,7 +38,7 @@ Cada blockchain usa um algoritmo específico para o cálculo de prova de trabalh
 | Scrypt | Litecoin (LTC), Dogecoin (DOGE) | ASIC |
 | Ethash | Ethereum Classic (ETC) | GPU (placa de vídeo) |
 | RandomX | Monero (XMR) moderno | **CPU** (AMD Ryzen, Intel) |
-| CryptoNight | Monero antigo, Bytecoin (BCN) | CPU (este minerador) |
+| CryptoNight | Monero antigo, Electroneum (ETN), Monero Classic (XMC) | CPU (este minerador) |
 
 **Regra de ouro:** CPU → moedas resistentes a ASIC (RandomX, CryptoNight, VerusHash). GPU → Ethash, KawPow. ASIC → SHA-256d, Scrypt. Não adianta usar a ferramenta errada.
 
@@ -85,7 +85,7 @@ Cada moeda tem pools específicos. Para encontrar um pool ativo, pesquise: "melh
 
 ### Passo 3: Baixe o minerador certo
 
-- Para **CryptoNight** (Monero antigo / Bytecoin): este cpuminer-multi.
+- Para **CryptoNight** (Monero antigo, Electroneum, Monero Classic, Sumokoin, Lethean): este cpuminer-multi.
 - Para **RandomX** (Monero moderno): [XMRig](https://github.com/xmrig/xmrig) (muito mais rápido).
 - Para **SHA-256d** (Bitcoin): ASIC com firmware próprio, ou [cgminer](https://github.com/ckolivas/cgminer) para testes.
 - Para **Ethash** (ETC): [lolMiner](https://github.com/Lolliedieb/lolMiner-releases) ou [TeamRedMiner](https://github.com/todxx/teamredminer).
@@ -95,6 +95,63 @@ Cada moeda tem pools específicos. Para encontrar um pool ativo, pesquise: "melh
 ## 3. CryptoNight — usando este cpuminer-multi
 
 > Este fork do @CanalQb suporta **apenas** CryptoNight com protocolo **JSON-RPC 2.0**. Pools modernos de Monero (RandomX) não funcionam aqui.
+
+### Passo 3.0: Compilando o minerador (instalação do MinGW/gcc)
+
+O projeto é código-fonte C — antes de rodar, você precisa de um compilador C e das bibliotecas. Isso varia por sistema operacional:
+
+**Windows — instalar o MinGW (via MSYS2):**
+
+O **MinGW** é o conjunto `gcc` + `make` + bibliotecas que compila código C no Windows. A maneira mais simples é instalar o **MSYS2**, que traz tudo:
+
+```powershell
+# Opção A: via winget (recomendado)
+winget install --id MSYS2.MSYS2 --accept-source-agreements
+```
+
+> Opção B: baixe o instalador em https://www.msys2.org/ e execute com os padrões.
+
+Depois, abra o terminal **MINGW64** (`C:\msys64\msys2_shell.cmd -mingw64` ou menu Iniciar) e instale as ferramentas:
+
+```bash
+pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-curl git autoconf automake libtool
+```
+
+Confira:
+
+```bash
+export PATH="/mingw64/bin:$PATH"
+gcc --version | head -1
+curl-config --version
+```
+
+**Linux — instalar o gcc/build-essential:**
+
+```bash
+# Debian/Ubuntu
+sudo apt update
+sudo apt install -y build-essential autoconf automake libtool pkg-config libcurl4-openssl-dev git
+
+# Fedora/RHEL/CentOS
+sudo dnf install -y gcc gcc-c++ make autoconf automake libtool pkgconfig libcurl-devel git
+
+# Arch/Manjaro
+sudo pacman -S --needed base-devel curl autoconf automake libtool pkg-config git
+```
+
+**Compilar (qualquer sistema):**
+
+```bash
+git clone https://github.com/canalqb/cpuminer-multi
+cd cpuminer-multi
+./autogen.sh
+CFLAGS="-O3" ./configure        # Linux otimizado: CFLAGS="-march=native"
+make -j"$(nproc)"               # Windows: make (ou make -j8)
+```
+
+No Windows o binário gerado é `minerd.exe`; no Linux, `minerd`. Teste com `./minerd --help`.
+
+> 💡 Dica: com Python 3 instalado, dá para usar o `minerar.py` do projeto — ele localiza o binário, monta o comando certo e mostra a saída em tempo real. Se o binário não existir, o script imprime estes mesmos passos.
 
 ### Passo 3.1: Conecte ao pool
 
@@ -145,8 +202,53 @@ Se você **não** vir o log "Using JSON-RPC 2.0", o binário pode ser de outro f
 ```bash
 ./minerd -B -o stratum+tcp://... -u ... -p x
 ```
-
 A flag `-B` faz o processo rodar em segundo plano (daemon).
+
+### Passo 3.5: Minerar Nerva (XNV) solo (sem pool)
+
+Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso:
+
+1. Baixe o pacote oficial em https://nerva.one/#downloads (v0.3.0.0+).
+2. Extraia o `nervad.exe` e o `nerva-wallet-rpc.exe` numa pasta irmã (ex.: `nerva-windows-x64-v0.3.0.0`) ou cole na pasta do projeto.
+3. Rode:
+
+```bash
+python minerar.py --nerva
+```
+
+Na primeira vez ele pergunta o endereço da carteira, threads, etc. e salva a config. Nas seguintes, `python minerar.py` já detecta que é Nerva e usa o `nervad.exe` automaticamente.
+
+> **Gerar carteira real a partir da private key:** a Nerva é uma moeda de privacidade — para receber e consultar saldo você precisa das chaves privadas, não apenas do endereço público. Use:
+>
+> ```bash
+> # Geração interativa (pergunta a spend key e gera o endereço real)
+> python minerar.py --nerva --gerar-carteira
+>
+> # Direto pela linha de comando (spend key em hex)
+> python minerar.py --nerva --gerar-carteira 0000000000000000000000000000000000000000000000000000000000000001
+> ```
+>
+> O script aceita a spend key em **hex** (64 caracteres) ou **inteiro decimal**, ajusta com zeros à esquerda e deriva o endereço real + chaves pública/privada. Ele pergunta se você quer salvar na config, consultar o saldo e iniciar a mineração.
+
+O script inicia o daemon com `--start-mining`, faz polling do RPC (porta 17566) e mostra hashrate/altura/dificuldade no terminal a cada 60s. O `--dashboard` funciona também para Nerva.
+
+> **Sincronização:** a primeira execução baixa a blockchain (pós-HF13, sync rápido com checkpoints). O daemon só minera de verdade após sincronizar.
+>
+> **Problema de DNS:** em algumas redes o daemon não consegue resolver os seeds via DNS-over-TCP próprio. O script já contorna isso adicionando `--add-peer` com os IPs dos seeds oficiais automaticamente.
+>
+> **Progresso compacto:** as linhas `Synced X/Y (Z%, W left)` do daemon aparecem na mesma linha (sobrescrevendo a anterior), para não encher o terminal.
+
+**Consultar saldo da carteira Nerva:** como a Nerva é uma moeda de privacidade, o saldo não pode ser obtido pelo endereço público. Se você gerou a carteira pelo script (as chaves privadas estão salvas na config), pode consultar o saldo com:
+
+```bash
+python minerar.py --saldo
+```
+
+A consulta usa o `nerva-wallet-rpc.exe` (mesmo pacote do `nervad.exe`) para importar as chaves e sincronizar com o daemon local. Ela roda em **segundo plano**: o script mostra o % de sincronização (altura atual vs alvo) e **não trava** — você pode seguir para a mineração enquanto isso. O saldo total e desbloqueado só é exibido quando a sincronização atinge 100%.
+
+> **Trocar a carteira não interrompe o daemon:** se você gerar uma nova carteira com outra private key, o daemon (blockchain) continua sincronizado — apenas a consulta de saldo reinicia com as novas chaves. O saldo mínimo para receber pagamento é de **40 XNV** por bloco (mecanismo anti-dust).
+
+> **Atenção:** a primeira execução baixa a blockchain (pós-HF13, sync rápido com checkpoints). O daemon só minera de verdade após sincronizar.
 
 ---
 
@@ -188,7 +290,7 @@ Tabela prática de **algoritmo → minerador → moeda**:
 | **Ethash (ETCHash)** | Ethereum Classic (ETC), EtherGem (EGEM) | lolMiner, TeamRedMiner, NBMiner | GPU (AMD/NVIDIA) |
 | **KawPow** | Ravencoin (RVN) | lolMiner, TeamRedMiner | GPU |
 | **RandomX** | Monero (XMR) moderno | XMRig | **CPU** (AMD Ryzen é o melhor) |
-| **CryptoNight** | Monero (XMR) antigo, Bytecoin (BCN) | **cpuminer-multi** (este!) | CPU |
+| **CryptoNight** | Monero (XMR) antigo, Electroneum (ETN), Monero Classic (XMC) | **cpuminer-multi** (este!) | CPU |
 | **VerusHash** | VerusCoin (VRSC) | VerusMiner, XMRig | **CPU** (Android até!) |
 | **Yespower** | Yenten (YTN), Safecoin (SAFE) | cpuminer-opt | CPU |
 | **GhostRider** | Raptoreum (RTM) | cpuminer-opt | CPU |

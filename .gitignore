@@ -1,7 +1,26 @@
 
 minerd
 minerd.exe
+nervad.exe
+nerva-wallet-*.exe
 *.o
+
+# minerar.py — config com endereço da carteira + blockchain da Nerva
+minerar.config.json
+nerva-data/
+
+# pastas temporárias da consulta de saldo Nerva
+nerva_saldo_*
+
+# logs de teste
+nerva_test_*.log
+
+# bytecode do Python
+__pycache__/
+*.pyc
+
+# DLLs de runtime (copiadas do MSYS2, não versionadas)
+*.dll
 
 autom4te.cache
 .deps
@@ -26,5 +45,7 @@ config.sub
 
 mingw32-config.cache
 
+# backups do autotools
+*.~
 
 *.iml

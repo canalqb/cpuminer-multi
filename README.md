@@ -40,7 +40,7 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 ## O que este projeto faz (e o que NÃO faz)
 
 ### Faz
-- Minera moedas baseadas no algoritmo **CryptoNight**: Monero (XMR — versões antigas), Bytecoin (BCN), e derivadas.
+- Minera moedas baseadas no algoritmo **CryptoNight**: Monero (XMR — versões antigas), Electroneum (ETN), Monero Classic (XMC), Sumokoin (SUMO), Lethean (LTHN) e derivadas (lista atualizada com cotações em CoinGecko/CMC dentro do `minerar.py`).
 - Conecta a pools que usam o protocolo **JSON-RPC 2.0** (estilo nodejs-pool / NiceHash / pools Monero antigos).
 - Roda em **múltiplas threads** de CPU, com controle de prioridade, afinidade e throttle para não travar seu computador.
 
@@ -63,6 +63,8 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 | 2 | `-a`/`--algo` aceitava qualquer nome mas **ignorava** (o miner sempre rodava cryptonight) | Agora rejeita algoritmos não suportados com mensagem clara; só `cryptonight` é aceito |
 | 3 | `memcpy(&rpc2_id, id, 64)` podia ler além do fim ou estourar o buffer de 64 bytes | Trocado por `strncpy` + terminação explícita |
 | 4 | Divisão por zero no cálculo de hashrate (`thr_times` = 0) gerava NaN | Adicionada guarda `thr_times[i] > 0` |
+| 5 | Compilação falhava no GCC 14+ com `static declaration of 'opt_no_affinity' follows non-static declaration` | Removido o `static` da declaração em `cpu-miner.c` (a variável já era `extern` em `miner.h`) |
+| 6 | **Segfault no benchmark**: `applog("Total: %s H/s", hashrate)` passava um `double` para `%s` (espera `char*`) — comportamento indefinido e crash após o 1º hash | Valor formatado em string com `sprintf` antes do `applog` |
 
 ### Baixo consumo de hardware
 - **Prioridade `nice 19` por padrão** — o minerador cede CPU para seus outros programas. Antes, não-root rodava com prioridade normal e **roubava** o sistema.
@@ -75,6 +77,13 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 - `sources.list` atualizado para Ubuntu 22.04 (Jammy).
 - `example-cfg.json` corrigido (mostrava `scrypt`, mas só cryptonight funciona).
 - `autogen.sh` agora usa `autoreconf -fi` (mais robusto) com fallback manual.
+
+### Mineração Nerva (XNV) solo e carteira
+- **Suporte oficial à Nerva (XNV)** — moeda solo, sem pool, via daemon oficial `nervad.exe`. O script detecta o binário (pasta do projeto ou irmã `nerva-*`), sobe o daemon, espera sincronizar e mostra hashrate/altura/dificuldade ao vivo.
+- **Geração de carteira real** (`--nerva --gerar-carteira`) — a partir da spend private key (hex ou inteiro decimal), deriva as chaves pública/privada e gera o endereço Nerva correto.
+- **Consulta de saldo** (`--saldo`) — usa o `nerva-wallet-rpc` para importar as chaves privadas (a Nerva é privada; não dá para consultar só pelo endereço). Roda em **segundo plano**: mostra o % de sincronização e o valor aparece quando atinge 100%.
+- **Contorno de DNS dos seeds** — em redes onde o daemon não resolve os seeds via DNS-over-TCP próprio, o script adiciona `--add-peer` com os IPs oficiais automaticamente.
+- **Progresso compacto** — as linhas `Synced X/Y (Z%, W left)` do daemon são exibidas na mesma linha (`\r`), sem poluir o terminal.
 
 ---
 
@@ -89,9 +98,81 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 
 ## Compilação
 
+### Instalando o MinGW no Windows
+
+**O que é MinGW?** É o conjunto de ferramentas que compila código C/C++ no Windows: o compilador `gcc`, o `make` e as bibliotecas (incluindo `libcurl`, obrigatória deste projeto). A forma mais fácil de ter tudo isso é instalar o **MSYS2**, um ambiente que entrega um shell Unix + MinGW64 no Windows.
+
+**Opção A — Instalar o MSYS2 via `winget` (recomendado, sem navegador):**
+
+```powershell
+winget install --id MSYS2.MSYS2 --accept-source-agreements
+```
+
+Instala em `C:\msys64`. Para usar, abra o terminal **MINGW64**:
+
+```powershell
+C:\msys64\msys2_shell.cmd -mingw64
+```
+
+ou pelo menu Iniciar → **MSYS2 MINGW64**.
+
+**Opção B — Instalar manualmente:** baixe o instalador em [msys2.org](https://www.msys2.org/), execute e avance com os padrões. Ao final, abra o **MINGW64**.
+
+Depois de abrir o MINGW64, instale as ferramentas de build:
+
+```bash
+pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-curl git autoconf automake libtool
+```
+
+> `mingw-w64-x86_64-toolchain` traz `gcc` + `make`; `mingw-w64-x86_64-curl` traz a `libcurl`; `autoconf`/`automake`/`libtool` geram o `configure`. O `--needed` pula o que já estiver instalado.
+
+Confira se ficou tudo certo (o `curl-config` prova que a libcurl está visível):
+
+```bash
+export PATH="/mingw64/bin:$PATH"
+gcc --version | head -1
+make --version | head -1
+curl-config --version
+```
+
+### Instalando o MinGW/gcc no Linux
+
+**O que é MinGW no Linux?** Para compilar este projeto nativamente no Linux você não precisa de "MinGW" em si — precisa do compilador `gcc` e das ferramentas de build. (MinGW é usado apenas para gerar executáveis `.exe` do Windows a partir do Linux, o que não é o caso aqui.)
+
+**Debian/Ubuntu:**
+
+```bash
+sudo apt update
+sudo apt install -y build-essential autoconf automake libtool pkg-config libcurl4-openssl-dev git
+```
+
+- `build-essential` → `gcc`, `g++`, `make`.
+- `libcurl4-openssl-dev` → headers e lib da `libcurl` (obrigatória).
+- `autoconf`/`automake`/`libtool`/`pkg-config` → geração do `configure`.
+
+**Fedora/RHEL/CentOS:**
+
+```bash
+sudo dnf install -y gcc gcc-c++ make autoconf automake libtool pkgconfig libcurl-devel git
+```
+
+**Arch/Manjaro:**
+
+```bash
+sudo pacman -S --needed base-devel curl autoconf automake libtool pkg-config git
+```
+
+Confira:
+
+```bash
+gcc --version | head -1
+make --version | head -1
+curl-config --version
+```
+
 ### Linux
 
-**Passo 1 — Instale as dependências de build.** No Debian/Ubuntu:
+**Passo 1 — Instale as dependências de build** (se ainda não as tem):
 
 ```bash
 sudo apt update
@@ -155,6 +236,15 @@ make
 
 O binário `minerd.exe` será gerado. Você pode rodá-lo pelo MINGW64 ou pelo `cmd`.
 
+> **Importante (rodar fora do MINGW64):** o `minerd.exe` precisa das DLLs de runtime do MinGW (`libcurl-4.dll`, `libssl-3-x64.dll`, `libwinpthread-1.dll`, etc.). Elas ficam em `C:\msys64\mingw64\bin`. Se você abrir um `cmd`/PowerShell comum sem esse diretório no `PATH`, o Windows acusa erro de `libcurl-4.dll` ausente. Para rodar em qualquer terminal:
+>
+> ```bash
+> # dentro do MINGW64, na pasta do projeto — copia todas as DLLs necessárias
+> ldd minerd.exe | grep mingw64 | awk '{print $1}' | sort -u | while read dll; do cp "/mingw64/bin/$dll" .; done
+> ```
+>
+> Depois disso, o `minerd.exe` roda de um `cmd` comum sem depender do MSYS2. (Este repositório já inclui essas DLLs junto do binário.)
+
 ### Docker
 
 ```bash
@@ -191,6 +281,51 @@ Para testar sem conectar a nenhum pool (benchmark):
 
 Isso roda 4 threads em modo offline e mostra o hashrate — ótimo para medir sua CPU.
 
+### Rodando pelo script Python (`minerar.py`)
+
+Se você tem **Python 3** instalado, o projeto inclui um `minerar.py` que localiza o binário, monta o comando e faz streaming da saída:
+
+```bash
+# Primeira execução: pergunta moeda, carteira, pool etc. e salva em minerar.config.json
+python minerar.py
+
+# Nas próximas vezes, é só rodar de novo — a config já está salva
+python minerar.py
+
+# Benchmark local (sem pool)
+python minerar.py --benchmark
+
+# Ver a config salva (sem minerar)
+python minerar.py --show
+
+# Refazer a configuração do zero
+python minerar.py --setup
+
+# Painel web ao vivo com hashrate/shares/pool (http://localhost:8080)
+python minerar.py --dashboard
+
+# Minerar Nerva (XNV) solo com o daemon oficial nervad.exe (sem pool)
+python minerar.py --nerva
+
+# Gerar carteira Nerva a partir da private key (hex ou inteiro decimal)
+python minerar.py --nerva --gerar-carteira 0000000000000000000000000000000000000000000000000000000000000001
+# Modo interativo (pergunta a chave)
+python minerar.py --nerva --gerar-carteira
+
+# Consultar saldo da carteira Nerva salva na config (sincroniza em 2º plano,
+# mostra o % e exibe o saldo ao atingir 100%)
+python minerar.py --saldo
+
+# Com baixo consumo (desktop)
+python minerar.py -o URL -u USER -p x -t 2 --priority 19 --throttle 2000
+```
+
+O script guarda **moeda, carteira, pool, worker, depósito mínimo para receber pagamento** e demais ajustes em `minerar.config.json`. Se o binário ainda não foi compilado, o script mostra os passos de build na tela. Encerre com `Ctrl+C`.
+
+> **Nerva (XNV)** é mineração **solo, sem pool** — o `minerar.py` detecta o `nervad.exe` do pacote oficial (https://nerva.one/#downloads) e roda a mineração sozinho, com status ao vivo (hashrate/altura via RPC do daemon). Durante o setup, digite `g` no campo do endereço para gerar uma carteira real a partir da sua spend key, ou use `python minerar.py --nerva --gerar-carteira`. Para consultar o saldo (a Nerva é privada — não dá para consultar pelo endereço), use `python minerar.py --saldo` com o daemon rodando e sincronizado.
+>
+> O progresso de sincronização da blockchain (`Synced X/Y …`) é exibido na mesma linha para não poluir o terminal, e a consulta de saldo roda em **segundo plano**: o script mostra o % de sincronização e continua respondendo, exibindo o valor da carteira somente quando a sincronização atinge 100%.
+
 ---
 
 ## Opções de linha de comando
@@ -218,6 +353,21 @@ Isso roda 4 threads em modo offline e mostra o hashrate — ótimo para medir su
 | `-r, --retries=N` | Máx. de tentativas (padrão: infinito) |
 | `-V, --version` | Mostra versão |
 | `-h, --help` | Ajuda |
+
+### Opções do `minerar.py`
+
+Além das opções acima (que o script repassa ao minerador), o `minerar.py` aceita:
+
+| Opção | Descrição |
+|-------|-----------|
+| `--setup` | Refazer a configuração do zero |
+| `--show` | Mostrar a config salva (sem minerar) |
+| `--benchmark` | Benchmark offline (ignora config e pool) |
+| `--dashboard[=PORTA]` | Painel web ao vivo (padrão: porta 8080) |
+| `--nerva` | Minera Nerva (XNV) solo com o `nervad.exe` (sem pool, sem minerd) |
+| `--gerar-carteira[=HEX]` | Gera a carteira Nerva a partir da spend key (hex ou inteiro). Sem argumento, entra no modo interativo |
+| `--saldo` | Consulta o saldo da carteira Nerva salva na config (sincroniza em 2º plano e exibe o valor ao chegar a 100%) |
+| `--extra ...` | Argumentos adicionais passados direto ao `minerd` |
 
 ---
 

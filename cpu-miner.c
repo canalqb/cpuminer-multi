@@ -147,7 +147,7 @@ static bool submit_old = false;
 bool use_syslog = false;
 static bool opt_background = false;
 static bool opt_quiet = false;
-static bool opt_no_affinity = false;
+bool opt_no_affinity = false;
 int opt_priority = 19;
 int opt_throttle = 0;
 static int opt_retries = -1;
@@ -1238,7 +1238,8 @@ static void *miner_thread(void *userdata) {
             if (i == opt_n_threads) {
                 switch(opt_algo) {
                 case ALGO_CRYPTONIGHT:
-                    applog(LOG_INFO, "Total: %s H/s", hashrate);
+                    sprintf(s, "%.2f", hashrate);
+                    applog(LOG_INFO, "Total: %s H/s", s);
                     break;
                 default:
                     sprintf(s, hashrate >= 1e6 ? "%.0f" : "%.2f", 1e-3 * hashrate);
