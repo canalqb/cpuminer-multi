@@ -85,7 +85,7 @@ Cada moeda tem pools específicos. Para encontrar um pool ativo, pesquise: "melh
 
 ### Passo 3: Baixe o minerador certo
 
-- Para **CryptoNight** (Monero antigo, Electroneum, Monero Classic, Sumokoin, Lethean): este cpuminer-multi.
+- Para **CryptoNight** (Monero antigo, Electroneum, Monero Classic): este cpuminer-multi.
 - Para **RandomX** (Monero moderno): [XMRig](https://github.com/xmrig/xmrig) (muito mais rápido).
 - Para **SHA-256d** (Bitcoin): ASIC com firmware próprio, ou [cgminer](https://github.com/ckolivas/cgminer) para testes.
 - Para **Ethash** (ETC): [lolMiner](https://github.com/Lolliedieb/lolMiner-releases) ou [TeamRedMiner](https://github.com/todxx/teamredminer).
@@ -206,7 +206,31 @@ A flag `-B` faz o processo rodar em segundo plano (daemon).
 
 ### Passo 3.5: Minerar Nerva (XNV) solo (sem pool)
 
-Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso.
+Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó completo e compete individualmente. O `minerar.py` do projeto gerencia tudo isso com o flag `--nerva`.
+
+### Passo 3.6: Minerar outras moedas CryptoNight via pool
+
+Além da Nerva (solo), o `minerar.py` tem flags próprios para cada moeda minerável via pool (CryptoNight v0 com o `minerd`):
+
+| Moeda | Flag | Modo |
+|-------|------|------|
+| Electroneum (ETN) | `python minerar.py --etn` | POOL |
+| Monero Classic (XMC) | `python minerar.py --xmc` | POOL |
+| Nerva (XNV) | `python minerar.py --nerva` | SOLO |
+
+Sem flag nenhuma, a **primeira execução mostra um menu** com todas as moedas suportadas — cada uma com modo (SOLO/POOL), dificuldade, cotação e depósito mínimo — e pergunta qual você quer minerar (basta digitar o número). Depois de escolhida, ela segue o fluxo de configuração específico daquela moeda (solo pede endereço/threads; pool pede endereço, worker, URL e senha do pool). Tudo é salvo em `minerar.config.json`.
+
+Para pool, use o flag e informe os dados do pool quando perguntado:
+
+```bash
+python minerar.py --etn
+# → pergunta endereço ETN, worker, URL do pool (stratum+tcp://...), threads...
+
+python minerar.py --xmc
+# → mesma coisa para Monero Classic
+```
+
+> As moedas que migraram de algoritmo (Zano, Aeon, Dero, Karbo, Sumokoin, Lethean…) ou sem liquidez foram **removidas** da lista — só ficam as que este binário realmente minera.
 
 #### Onde instalar os arquivos da Nerva
 

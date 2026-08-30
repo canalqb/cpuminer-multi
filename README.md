@@ -40,7 +40,7 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 ## O que este projeto faz (e o que NÃO faz)
 
 ### Faz
-- Minera moedas baseadas no algoritmo **CryptoNight**: Monero (XMR — versões antigas), Electroneum (ETN), Monero Classic (XMC), Sumokoin (SUMO), Lethean (LTHN) e derivadas (lista atualizada com cotações em CoinGecko/CMC dentro do `minerar.py`).
+- Minera moedas baseadas no algoritmo **CryptoNight**: Electroneum (ETN), Monero Classic (XMC) e derivadas via pool, além de **Nerva (XNV) solo** com daemon oficial (CNA v6). Lista atualizada com cotações em CoinGecko/CMC dentro do `minerar.py`.
 - Conecta a pools que usam o protocolo **JSON-RPC 2.0** (estilo nodejs-pool / NiceHash / pools Monero antigos).
 - Roda em **múltiplas threads** de CPU, com controle de prioridade, afinidade e throttle para não travar seu computador.
 
@@ -84,6 +84,10 @@ adaptado e melhorado pelo **@CanalQb**. Documentação 100% em português.
 - **Consulta de saldo** (`--saldo`) — usa o `nerva-wallet-rpc` para importar as chaves privadas (a Nerva é privada; não dá para consultar só pelo endereço). Roda em **segundo plano**: mostra o % de sincronização e o valor aparece quando atinge 100%.
 - **Contorno de DNS dos seeds** — em redes onde o daemon não resolve os seeds via DNS-over-TCP próprio, o script adiciona `--add-peer` com os IPs oficiais automaticamente.
 - **Progresso compacto** — as linhas `Synced X/Y (Z%, W left)` do daemon são exibidas na mesma linha (`\r`), sem poluir o terminal.
+
+### Multi-moeda com flag por moeda
+- Cada moeda suportada tem um **flag CLI próprio**: `--nerva` (solo), `--etn`/`--electroneum` (pool) e `--xmc`/`--monero-classic` (pool). Sem flag, a **primeira execução pergunta qual moeda minerar** com uma apresentação clara (modo SOLO/POOL, dificuldade, cotação, depósito mínimo e o comando de cada uma).
+- Moedas que migraram de algoritmo (Zano-PoW, cryptonight-lite, K12, AstroBWT, CN-R, Argon2id, RandomX) ou sem liquidez real foram **removidas** — só ficam as mineráveis de verdade com este binário.
 
 ---
 
@@ -286,7 +290,8 @@ Isso roda 4 threads em modo offline e mostra o hashrate — ótimo para medir su
 Se você tem **Python 3** instalado, o projeto inclui um `minerar.py` que localiza o binário, monta o comando e faz streaming da saída:
 
 ```bash
-# Primeira execução: pergunta moeda, carteira, pool etc. e salva em minerar.config.json
+# Primeira execução: pergunta QUAL moeda minerar (menu com todas), carteira,
+# pool etc. e salva em minerar.config.json
 python minerar.py
 
 # Nas próximas vezes, é só rodar de novo — a config já está salva
@@ -298,14 +303,22 @@ python minerar.py --benchmark
 # Ver a config salva (sem minerar)
 python minerar.py --show
 
-# Refazer a configuração do zero
+# Refazer a configuração do zero (pergunta a moeda de novo)
 python minerar.py --setup
 
 # Painel web ao vivo com hashrate/shares/pool (http://localhost:8080)
 python minerar.py --dashboard
 
+# --- Escolha direta da moeda por flag (cada uma tem a sua) ---
+
 # Minerar Nerva (XNV) solo com o daemon oficial nervad.exe (sem pool)
 python minerar.py --nerva
+
+# Minerar Electroneum (ETN) via pool (CryptoNight v0, minerd)
+python minerar.py --etn          # ou --electroneum
+
+# Minerar Monero Classic (XMC) via pool (CryptoNight v0, minerd)
+python minerar.py --xmc          # ou --monero-classic
 
 # Gerar carteira Nerva a partir da private key (hex ou inteiro decimal)
 python minerar.py --nerva --gerar-carteira 0000000000000000000000000000000000000000000000000000000000000001
@@ -320,7 +333,9 @@ python minerar.py --saldo
 python minerar.py -o URL -u USER -p x -t 2 --priority 19 --throttle 2000
 ```
 
-O script guarda **moeda, carteira, pool, worker, depósito mínimo para receber pagamento** e demais ajustes em `minerar.config.json`. Se o binário ainda não foi compilado, o script mostra os passos de build na tela. Encerre com `Ctrl+C`.
+O script guarda **moeda, carteira, pool, worker, depósito mínimo para receber pagamento** e demais ajustes em `minerar.config.json`. Na primeira execução (ou com `--setup`) ele mostra um menu com as moedas suportadas — cada uma com o modo (SOLO/POOL), dificuldade, cotação, depósito mínimo e o comando próprio — e você digita o número da que quer minerar. Se o binário ainda não foi compilado, o script mostra os passos de build na tela. Encerre com `Ctrl+C`.
+
+> **Moedas suportadas hoje:** Nerva (XNV — solo, sem pool), Electroneum (ETN) e Monero Classic (XMC) — estas duas via pool com o `minerd` (CryptoNight v0). As que migraram de algoritmo (Zano, Aeon, Dero, Karbo, Sumokoin, Lethean…) ou sem liquidez foram removidas da lista.
 
 > **Nerva (XNV)** é mineração **solo, sem pool** — o `minerar.py` detecta o `nervad.exe` do pacote oficial (https://nerva.one/#downloads) e roda a mineração sozinho, com status ao vivo (hashrate/altura via RPC do daemon). Durante o setup, digite `g` no campo do endereço para gerar uma carteira real a partir da sua spend key, ou use `python minerar.py --nerva --gerar-carteira`. Para consultar o saldo (a Nerva é privada — não dá para consultar pelo endereço), use `python minerar.py --saldo` com o daemon rodando e sincronizado.
 >
@@ -396,6 +411,8 @@ Além das opções acima (que o script repassa ao minerador), o `minerar.py` ace
 | `--benchmark` | Benchmark offline (ignora config e pool) |
 | `--dashboard[=PORTA]` | Painel web ao vivo (padrão: porta 8080) |
 | `--nerva` | Minera Nerva (XNV) solo com o `nervad.exe` (sem pool, sem minerd) |
+| `--etn` / `--electroneum` | Minera Electroneum (ETN) via pool com o `minerd` (CryptoNight v0) |
+| `--xmc` / `--monero-classic` | Minera Monero Classic (XMC) via pool com o `minerd` (CryptoNight v0) |
 | `--gerar-carteira[=HEX]` | Gera a carteira Nerva a partir da spend key (hex ou inteiro). Sem argumento, entra no modo interativo |
 | `--saldo` | Consulta o saldo da carteira Nerva salva na config (sincroniza em 2º plano e exibe o valor ao chegar a 100%) |
 | `--extra ...` | Argumentos adicionais passados direto ao `minerd` |

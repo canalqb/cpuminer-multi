@@ -17,7 +17,13 @@ Uso:
     python minerar.py --show         # mostra a config salva (sem minerar)
     python minerar.py --benchmark    # benchmark offline (ignora a config)
     python minerar.py --dashboard    # abre painel web local (http://localhost:8080)
-    python minerar.py --nerva        # minera Nerva (XNV) solo com o nervad.exe
+
+Moedas suportadas (cada uma tem um flag próprio):
+    python minerar.py --nerva        # Nerva (XNV)  — SOLO, com o nervad.exe
+    python minerar.py --etn          # Electroneum (ETN) — pool, com o minerd
+    python minerar.py --xmc          # Monero Classic (XMC) — pool, com o minerd
+
+Sem flag, o script pergunta QUAL moeda minerar na primeira configuração.
 
 Opções que sobrescrevem a config salva naquele run:
     -o URL -u USER -p PASS -t N --priority N --throttle N
@@ -135,114 +141,150 @@ def config_padrao():
     }
 
 
-# Lista de moedas da família CryptoNight que AINDA EXISTEM com cotação
-# verificada em CoinGecko (CG) ou CoinMarketCap (CMC). Formato FLEXÍVEL:
-# (nome), (nome, depósito_mínimo) ou (nome, nota, depósito_mínimo) — o
-# script normaliza tudo. Dificuldade/cotação podem ficar no próprio nome.
-# O depósito mínimo é um valor SUGERIDO (padrão de pools típicas);
-# confirme o valor da sua pool antes de minerar.
-# IMPORTANTE — este binário minera SOMENTE cryptonight ORIGINAL (v0):
-#   * Grupo 1 = dá para minerar AQUI (cryptonight original).
-#   * Grupo 2 = existem e têm valor, mas exigem outro algoritmo
-#               (cryptonight-lite, Zano-PoW, AstroBWT...) — NÃO funcionam
-#               com este binário.
-#   * Grupo 3 = existem (página de cotação), mas volume ~zero —
-#               sem liquidez, a moeda minerada não vale nada.
-# Moedas delistadas ou sem página de cotação foram REMOVIDAS.
+# ---------------------------------------------------------------------------
+# Registro de moedas suportadas
+# ---------------------------------------------------------------------------
+# IMPORTANTE — este build do CPUMiner-Multi minera SOMENTE CryptoNight
+# original (v0). As moedas abaixo são as que AINDA existem com cotação
+# real (CoinGecko/CMC) E que realmente dão para minerar com este script:
+#
+#   * Nerva (XNV)  → SOLO, sem pool. Usa o daemon oficial nervad.exe
+#                    (CryptoNight-Adaptive v6) — NÃO usa o minerd.
+#   * ETN / XMC    → via pool com o minerd (CryptoNight v0).
+#
+# Foram REMOVIDAS as que migraram de algoritmo (Zano-PoW, cryptonight-lite,
+# K12, AstroBWT, CN-R, Argon2id, RandomX...) e as sem liquidez real.
+# Cada moeda tem um flag CLI próprio: python minerar.py --nerva / --etn / --xmc
 MOEDAS_CRYPTONIGHT = [
-    # Grupo 1 — mineráveis com este binário (cryptonight original)
-    ("Monero (XMR) - Muito alta - CG #16 · US$8,8 bi · só pools antigas pré-RandomX · depósito mín.: 0,1 XMR",
-     "0,1 XMR"),
-    ("Electroneum (ETN) - Média - CG #1027 · US$13 mi · CryptoNight original · depósito mín.: 100 ETN",
-     "100 ETN"),
-    ("Monero Classic (XMC) - Baixa - CMC · vol ~US$16 mil/dia · CryptoNight original · depósito mín.: 1 XMC",
-     "1 XMC"),
-    ("Sumokoin (SUMO) - Baixa - CMC · vol ~US$3 mil/dia · confirme variante na pool · depósito mín.: 1 SUMO",
-     "1 SUMO"),
-    ("Lethean (LTHN) - Baixa - CMC · vol ~US$1 mil/dia · CryptoNight original · depósito mín.: 1 LTHN",
-     "1 LTHN"),
-    # Grupo 2 — existem com valor, mas exigem algoritmo NÃO suportado aqui
-    ("Zano (ZANO) - Média - CG #227 · US$125 mi · Zano-PoW (não suportado aqui) · depósito mín.: 1 ZANO",
-     "1 ZANO"),
-    ("Aeon (AEON) - Média - CG #1018 · US$13 mi · cryptonight-lite (não suportado aqui) · depósito mín.: 1 AEON",
-     "1 AEON"),
-    ("Nerva (XNV) - Baixa - CG #2500 · US$1,5 mi · SOLO, sem pool (nervad/NervaOne) · CNA v6 (não suportado aqui) · saldo mín.: 40 XNV",
-     "40 XNV"),
-    ("Dero (DERO) - Baixa - CG #5299 · US$107 mil · AstroBWT (não é mais CryptoNight) · depósito mín.: 0,1 DERO",
-     "0,1 DERO"),
-    # Grupo 3 — existem (cotação), mas sem liquidez real
-    ("Karbo (KRB) - Baixa - CG #4596 · vol ~US$3/dia · atividade incerta · depósito mín.: 1 KRB",
-     "1 KRB"),
-    ("ArQmA (ARQ) - Baixa - CMC · sem volume · atividade incerta · depósito mín.: 10 ARQ",
-     "10 ARQ"),
-    ("Conceal (CCX) - Baixa - CG #6108 · vol ~US$63/dia · atividade incerta · depósito mín.: 1 CCX",
-     "1 CCX"),
-    ("TurtleCoin (TRTL) - Baixa - CMC · vol ~US$20/dia · atividade incerta · depósito mín.: 10.000 TRTL",
-     "10.000 TRTL"),
-    ("Bytecoin (BCN) - Baixa - CG · cap US$0 · atividade incerta · depósito mín.: 10 BCN",
-     "10 BCN"),
-    ("Dashcoin (DSH) - Baixa - CMC · sem mercados ativos · atividade incerta · depósito mín.: 1 DSH",
-     "1 DSH"),
-    ("Outra derivada do CryptoNight", "—", ""),
+    {
+        "flag": "nerva",          # python minerar.py --nerva
+        "nome": "Nerva (XNV)",
+        "ticker": "XNV",
+        "modo": "solo",           # solo = nervad (sem pool); pool = minerd
+        "algo": "CryptoNight-Adaptive v6 (daemon oficial)",
+        "dificuldade": "Baixa",
+        "mercado": "CG #2469 · US$1,5 mi",
+        "payout_min": "40 XNV",
+        "nota": "SOLO sem pool — recompensa de bloco direto na sua carteira.",
+        "gerar_carteira": True,   # tem gerador de carteira integrado
+        "prefixo": "NV",          # validação de endereço
+    },
+    {
+        "flag": "etn",            # python minerar.py --etn
+        "nome": "Electroneum (ETN)",
+        "ticker": "ETN",
+        "modo": "pool",
+        "algo": "CryptoNight v0 (minerd)",
+        "dificuldade": "Média",
+        "mercado": "CG #1025 · US$13,3 mi · vol ~US$294 mil/dia",
+        "payout_min": "100 ETN",
+        "nota": "Mine na rede legada (Legacy L1) — confirme a pool antes.",
+        "gerar_carteira": False,
+        "prefixo": "etn",
+    },
+    {
+        "flag": "xmc",            # python minerar.py --xmc
+        "nome": "Monero Classic (XMC)",
+        "ticker": "XMC",
+        "modo": "pool",
+        "algo": "CryptoNight v0 (minerd)",
+        "dificuldade": "Baixa",
+        "mercado": "CMC · vol ~US$16,6 mil/dia",
+        "payout_min": "1 XMC",
+        "nota": "Pools ativas: tpool.io, Minergate. Fork pré-RandomX do Monero.",
+        "gerar_carteira": False,
+        "prefixo": "4",
+    },
+    {
+        "flag": "custom",         # pool CryptoNight v0 personalizada
+        "nome": "Outra derivada do CryptoNight",
+        "ticker": "",
+        "modo": "pool",
+        "algo": "CryptoNight v0 (minerd)",
+        "dificuldade": "—",
+        "mercado": "—",
+        "payout_min": "",
+        "nota": "Qualquer pool CryptoNight v0 com protocolo JSON-RPC 2.0.",
+        "gerar_carteira": False,
+        "prefixo": "",
+    },
 ]
 
 
-def _normalizar_moeda(item):
-    """Normaliza uma entrada da lista: devolve (nome, nota, payout).
-
-    Aceita (nome), (nome, payout) ou (nome, nota, payout) — assim a lista
-    pode ser editada à vontade sem quebrar o script.
-    """
-    if not isinstance(item, (tuple, list)):
-        item = (item,)
-    item = [str(x) for x in item]
-    if len(item) == 1:
-        return (item[0], "", "")
-    if len(item) == 2:
-        # Formato atual: (nome com tudo, depósito mínimo)
-        return (item[0], "", item[1])
-    return (item[0], item[1], item[2])
+def info_moeda(nome_moeda):
+    """Localiza o registro de uma moeda pelo nome, ticker ou flag CLI."""
+    nome_moeda = str(nome_moeda or "")
+    for m in MOEDAS_CRYPTONIGHT:
+        if nome_moeda == m["nome"] or nome_moeda == m["flag"]:
+            return m
+    for m in MOEDAS_CRYPTONIGHT:
+        if m["ticker"] and m["ticker"] in nome_moeda:
+            return m
+    return None
 
 
-# Lista normalizada usada pelo script (nome, nota, payout)
-MOEDAS = [_normalizar_moeda(m) for m in MOEDAS_CRYPTONIGHT]
+def eh_solo(nome_moeda):
+    """True se a moeda minera SOLO (daemon oficial, sem pool)."""
+    m = info_moeda(nome_moeda)
+    return bool(m and m["modo"] == "solo")
+
+
+def moeda_pela_cli(args):
+    """Devolve o registro da moeda pedida pelos flags CLI (--nerva/--etn/--xmc)."""
+    for m in MOEDAS_CRYPTONIGHT:
+        if getattr(args, m["flag"], False):
+            return m
+    return None
 
 
 def escolher_moeda():
-    """Exibe as moedas compatíveis numeradas e pergunta qual o usuário quer minerar."""
-    print("\nMoedas compatíveis com este minerador (CryptoNight):")
-    print("  Dificuldade estimada (qualitativa): Muito alta ▸ Alta ▸ Média ▸ Baixa")
-    print("-" * 60)
-    for i, (moeda, nota, _) in enumerate(MOEDAS, 1):
-        print(f"  {i:2d}. {moeda}")
-        if nota and nota != "—":
-            print(f"      {nota}")
-    print("-" * 60)
-    print("  (digite o número da moeda ou o nome personalizado)")
+    """Apresenta as moedas e pergunta QUAL o usuário deseja minerar.
+    Mostra o modo (SOLO/POOL) e o comando CLI de cada uma."""
+    print("\n" + "=" * 64)
+    print("  ESCOLHA A MOEDA QUE DESEJA MINERAR")
+    print("=" * 64)
+    print("  Modo SOLO : minera direto na rede (sem pool) — Nerva")
+    print("  Modo POOL : minera numa pool (pagamento mais estável)")
+    print("-" * 64)
+    for i, m in enumerate(MOEDAS_CRYPTONIGHT, 1):
+        modo = "SOLO" if m["modo"] == "solo" else "POOL"
+        print(f"  {i:2d}. {m['nome']}  [{modo}]")
+        print(f"      {m['algo']} · dificuldade {m['dificuldade'].lower()}"
+              f" · {m['mercado']}")
+        if m["nota"]:
+            print(f"      {m['nota']}")
+        if m["payout_min"]:
+            print(f"      Depósito mínimo sugerido: {m['payout_min']}")
+        if m["flag"] != "custom":
+            print(f"      Rode: python minerar.py --{m['flag']}")
+    print("-" * 64)
+    print("  (digite o número da moeda, o nome, ou o flag --etn/--xmc)")
     print()
 
     while True:
-        valor = input("Moeda: ").strip()
+        valor = input("Moeda: ").strip().lstrip("-")
         if not valor:
             print("  [aviso] Escolha uma moeda da lista.")
             continue
-        # Verifica se é número da lista
+        # Número da lista
         try:
             idx = int(valor)
-            if 1 <= idx <= len(MOEDAS):
-                return MOEDAS[idx - 1][0]
+            if 1 <= idx <= len(MOEDAS_CRYPTONIGHT):
+                return MOEDAS_CRYPTONIGHT[idx - 1]["nome"]
         except ValueError:
             pass
-        # Nome personalizado — aceita
+        # Flag (--etn / --xmc / --nerva) ou nome
+        m = info_moeda(valor)
+        if m:
+            return m["nome"]
+        # Nome personalizado — aceita (modo pool)
         return valor
 
 
 def sugestao_payout(coin):
     """Devolve o depósito mínimo sugerido da moeda (ou '' se não houver)."""
-    for nome, _, payout in MOEDAS:
-        if nome == coin:
-            return payout
-    return ""
+    m = info_moeda(coin)
+    return m["payout_min"] if m else ""
 
 
 def validar_address(address, coin):
@@ -250,10 +292,10 @@ def validar_address(address, coin):
     if len(address) < 20:
         print(f"  [aviso] Endereço muito curto ({len(address)} chars). "
               "Endereços CryptoNote costumam ter ~95 caracteres.")
-    if coin.startswith("Monero (XMR)") and not address.startswith("4"):
-        print("  [aviso] Endereços Monero (XMR) geralmente começam com '4'.")
-    if "Bytecoin" in coin and not address.startswith("2"):
-        print("  [aviso] Endereços Bytecoin (BCN) geralmente começam com '2'.")
+    m = info_moeda(coin)
+    prefixo = m["prefixo"] if m else ""
+    if prefixo and not address.startswith(prefixo):
+        print(f"  [aviso] Endereços {coin} geralmente começam com '{prefixo}'.")
 
 
 # ---------------------------------------------------------------------------
@@ -660,31 +702,22 @@ def configurar(coin_fixa=None):
 
     # 1) Qual moeda será minerada
     cfg["coin"] = coin_fixa if coin_fixa else escolher_moeda()
+    m = info_moeda(cfg["coin"])
 
-    if "Monero" in cfg["coin"]:
+    if m and "RandomX" in m.get("nota", ""):
         print("\n[aviso] Monero hoje usa RandomX (XMRig). Este minerador serve")
         print("        para versões ANTIGAS / forks pré-RandomX do CryptoNight.")
         print("        Certifique-se de que a pool fala JSON-RPC 2.0.\n")
-
-    # Aviso para moedas com atividade incerta (nome ou nota podem conter o texto)
-    for moeda_nome, nota, _ in MOEDAS:
-        if moeda_nome == cfg["coin"] and ("atividade incerta" in nota or "atividade incerta" in moeda_nome):
-            print("[aviso] Esta moeda pode não ter pools ativas ou pode estar")
-            print("        descontinuada. Verifique se ainda há pools minerando-a")
-            print("        antes de investir tempo.\n")
-            if not perguntar_sn("Deseja continuar mesmo assim?", "n"):
-                print("\n[OK] Nada foi salvo. Rode o script de novo para escolher outra moeda.")
-                sys.exit(0)
 
     # 1b) Saldo mínimo para receber pagamento (pool ou exchange)
     cfg["payout_min"] = perguntar(
         "Saldo mínimo para receber o pagamento — pool ou exchange (ex.: 40 XNV)",
         sugestao_payout(cfg["coin"]))
 
-    # Nerva (XNV) = mineração SOLO com o daemon oficial (nervad). Não existe
-    # pool e o minerd NÃO roda XNV — então pede só o essencial e pula os
+    # Moedas SOLO (Nerva) = mineração com o daemon oficial (nervad). Não
+    # existe pool e o minerd NÃO roda XNV — pede só o essencial e pula os
     # campos de pool (url, worker, pass, etc.).
-    if "Nerva" in cfg["coin"]:
+    if eh_solo(cfg["coin"]):
         print("\n[aviso] Nerva (XNV) é mineração SOLO — não existe pool. O script")
         print("        usa o daemon oficial nervad.exe (CryptoNight-Adaptive v6).")
         print("        Baixe o pacote em https://nerva.one/#downloads se pedir.\n")
@@ -1209,7 +1242,7 @@ def criar_stats(cfg):
         "synced": "—",
         "inicio": time.time(),
     }
-    if "Nerva" in str(cfg.get("coin", "")):
+    if eh_solo(str(cfg.get("coin", ""))):
         stats["algo"] = "CryptoNight-Adaptive v6 (solo)"
         stats["pool"] = "SOLO — sem pool"
         stats["threads"] = horario(cfg.get("nerva_threads"))
@@ -1507,7 +1540,7 @@ def iniciar_dashboard(cfg, porta=DASHBOARD_PADRAO):
 def rodar_com_dashboard(binario, cfg, cmd, args):
     """Executa o minerador e, se `--dashboard` foi pedido, sobe o painel web.
     No modo Nerva (solo), também liga o RPC poller e o resumo de terminal."""
-    eh_nerva = "Nerva" in str(cfg.get("coin", "")) or getattr(args, "nerva", False)
+    eh_nerva = eh_solo(str(cfg.get("coin", ""))) or getattr(args, "nerva", False)
     if eh_nerva:
         # O daemon de fundo (sync) ocupa as portas RPC — encerra antes de
         # minerar em foreground para evitar conflito de porta.
@@ -1560,9 +1593,11 @@ def main():
                "  python minerar.py --setup        # refazer a configuração\n"
                "  python minerar.py --show         # ver a config salva\n"
                "  python minerar.py --benchmark    # benchmark offline\n"
-               "  python minerar.py --nerva        # minera Nerva solo com nervad.exe\n"
-               "  python minerar.py --gerar-carteira 0100...0   # gera carteira Nerva da spend key\n"
-               "  python minerar.py --saldo        # consulta o saldo da carteira Nerva salva\n"
+               "  python minerar.py --nerva        # minera Nerva (XNV) solo com nervad.exe\n"
+               "  python minerar.py --etn          # minera Electroneum (ETN) via pool\n"
+               "  python minerar.py --xmc          # minera Monero Classic (XMC) via pool\n"
+               "  python minerar.py --nerva --gerar-carteira   # gera carteira Nerva\n"
+               "  python minerar.py --saldo        # saldo da carteira Nerva salva\n"
                "  python minerar.py -t 2 --throttle 2000   # ajusta no run atual\n",
     )
     parser.add_argument(
@@ -1622,6 +1657,14 @@ def main():
         help="Minera Nerva (XNV) solo com o daemon oficial nervad (sem pool, sem minerd).",
     )
     parser.add_argument(
+        "--etn", "--electroneum", action="store_true", dest="etn",
+        help="Minera Electroneum (ETN) via pool (CryptoNight v0).",
+    )
+    parser.add_argument(
+        "--xmc", "--monero-classic", action="store_true", dest="xmc",
+        help="Minera Monero Classic (XMC) via pool (CryptoNight v0).",
+    )
+    parser.add_argument(
         "--gerar-carteira", nargs="?", const="__interativo__", metavar="HEX",
         help="Gera a carteira Nerva a partir da spend key (hex ou inteiro). "
              "Sem argumento, pergunta a chave. Não minera.",
@@ -1643,7 +1686,7 @@ def main():
     # minerar em foreground, ele é encerrado para liberar as portas.
     cfg_ini = carregar_config() or {}
     eh_nerva = (args.nerva or args.saldo or args.gerar_carteira
-                or "Nerva" in str(cfg_ini.get("coin", "")))
+                or eh_solo(str(cfg_ini.get("coin", ""))))
     # `python minerar.py` (config Nerva) vai DIRETO minerar em foreground:
     # o próprio nervad com --start-mining sobe, sincroniza e minera, fazendo
     # o bind das portas. Subir um daemon de fundo antes causaria conflito de
@@ -1683,8 +1726,8 @@ def main():
                     cfg["address"] = addr
                     cfg["nerva_spend_key"] = sk
                     cfg["nerva_view_key"] = vk
-                    if "Nerva" not in str(cfg.get("coin", "")):
-                        cfg["coin"] = "Nerva (XNV) — SOLO, sem pool"
+                    if not eh_solo(str(cfg.get("coin", ""))):
+                        cfg["coin"] = "Nerva (XNV)"
                     salvar_config(cfg)
                     print(f"\n[OK] Endereço e chaves salvas em {CONFIG_FILE}.")
                     if perguntar_sn("Consultar o saldo desta carteira agora?", "s"):
@@ -1726,9 +1769,11 @@ def main():
 
     # --setup: reconfigure do zero e, se quiser, já minera
     if args.setup:
-        cfg = configurar(coin_fixa="Nerva (XNV)" if args.nerva else None)
+        pedida = moeda_pela_cli(args)
+        coin_fixa = pedida["nome"] if pedida else None
+        cfg = configurar(coin_fixa=coin_fixa)
         if perguntar_sn("Iniciar a mineração agora?", "s"):
-            if "Nerva" in cfg["coin"]:
+            if eh_solo(cfg["coin"]):
                 binario = localizar_nervad()
                 if not binario:
                     print(instrucoes_nerva(), file=sys.stderr)
@@ -1752,11 +1797,11 @@ def main():
     cfg = carregar_config()
 
     if cfg is None:
-        # Não há config salva. Se o usuário passou -o e -u na linha,
-        # monta uma config provisória com os defaults; senão entra no
-        # assistente interativo.
-        if args.nerva:
-            cfg = configurar(coin_fixa="Nerva (XNV)")
+        # Não há config salva. Se o usuário passou um flag de moeda (-o/-u)
+        # ou CLI flag (--nerva/--etn/--xmc), monta a config direto.
+        pedida = moeda_pela_cli(args)
+        if pedida:
+            cfg = configurar(coin_fixa=pedida["nome"])
         elif args.url and args.user:
             cfg = config_padrao()
             cfg["url"] = args.url
@@ -1770,10 +1815,11 @@ def main():
                 print("\nConfiguração salva. Para minerar depois, rode: python minerar.py")
                 sys.exit(0)
 
-    # --nerva pede a Nerva: se a config salva é de outra moeda, refaz para XNV
-    if args.nerva and "Nerva" not in str(cfg.get("coin", "")):
-        print("[minerar.py] Config salva é de outra moeda — refazendo para Nerva (XNV).\n")
-        cfg = configurar(coin_fixa="Nerva (XNV)")
+    # Flag CLI pede moeda específica: se a config salva é de outra, refaz
+    moeda_pedida = moeda_pela_cli(args)
+    if moeda_pedida and moeda_pedida["nome"] != str(cfg.get("coin", "")):
+        print(f"[minerar.py] Config salva é de outra moeda — refazendo para {moeda_pedida['nome']}.\n")
+        cfg = configurar(coin_fixa=moeda_pedida["nome"])
 
     # Sobrescritas por CLI (deste run) — mesmo se veio da config
     if args.url:
@@ -1783,8 +1829,8 @@ def main():
     if args.passwd is not None:
         cfg["pass"] = args.passwd
 
-    # Nerva = solo: usa o daemon oficial, não o minerd
-    if args.nerva or "Nerva" in str(cfg.get("coin", "")):
+    # Solo (Nerva): usa o daemon oficial, não o minerd
+    if eh_solo(str(cfg.get("coin", ""))):
         binario = localizar_nervad()
         if not binario:
             print(instrucoes_nerva(), file=sys.stderr)
