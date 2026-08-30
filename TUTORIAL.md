@@ -38,7 +38,7 @@ Cada blockchain usa um algoritmo específico para o cálculo de prova de trabalh
 | Scrypt | Litecoin (LTC), Dogecoin (DOGE) | ASIC |
 | Ethash | Ethereum Classic (ETC) | GPU (placa de vídeo) |
 | RandomX | Monero (XMR) moderno | **CPU** (AMD Ryzen, Intel) |
-| CryptoNight | Monero antigo, Electroneum (ETN), Monero Classic (XMC) | CPU (este minerador) |
+| CryptoNight | Monero antigo, Nerva (XNV — CNA v6), pools CryptoNight v0 | CPU (este minerador / nervad) |
 
 **Regra de ouro:** CPU → moedas resistentes a ASIC (RandomX, CryptoNight, VerusHash). GPU → Ethash, KawPow. ASIC → SHA-256d, Scrypt. Não adianta usar a ferramenta errada.
 
@@ -212,29 +212,31 @@ Nerva (XNV) é uma moeda **solo, sem pool** — cada minerador roda um nó compl
 >
 > Todo o hashrate para Nerva vem do **`nervad.exe`** com `--start-mining`. O daemon sincroniza a blockchain E minera ao mesmo tempo. O `minerar.py` configura threads, afinidade e prioridade no próprio daemon.
 
-### Passo 3.6: Minerar outras moedas CryptoNight via pool
+### Passo 3.6: Pools CryptoNight v0 personalizadas
 
-Além da Nerva (solo), o `minerar.py` tem flags próprios para cada moeda minerável via pool (CryptoNight v0 com o `minerd`):
+Além da Nerva (solo), o `minerar.py` permite minerar em **qualquer pool CryptoNight v0** com protocolo JSON-RPC 2.0 (opção "Outra derivada do CryptoNight" no menu). Não há flag dedicada — basta escolher a opção no menu ou digitar o nome.
 
-| Moeda | Flag | Modo |
-|-------|------|------|
-| Electroneum (ETN) | `python minerar.py --etn` | POOL |
-| Monero Classic (XMC) | `python minerar.py --xmc` | POOL |
-| Nerva (XNV) | `python minerar.py --nerva` | SOLO |
+| Moeda | Modo | Como selecionar |
+|-------|------|-----------------|
+| Nerva (XNV) | SOLO | `python minerar.py --nerva` |
+| Pool CryptoNight v0 (custom) | POOL | menu → "Outra derivada do CryptoNight" |
 
-Sem flag nenhuma, a **primeira execução mostra um menu** com todas as moedas suportadas — cada uma com modo (SOLO/POOL), dificuldade, cotação e depósito mínimo — e pergunta qual você quer minerar (basta digitar o número). Depois de escolhida, ela segue o fluxo de configuração específico daquela moeda (solo pede endereço/threads; pool pede endereço, worker, URL e senha do pool). Tudo é salvo em `minerar.config.json`.
+Sem flag nenhuma, a **primeira execução mostra um menu** com as moedas suportadas — cada uma com modo (SOLO/POOL), dificuldade, cotação e depósito mínimo — e pergunta qual você quer minerar (basta digitar o número). Depois de escolhida, ela segue o fluxo de configuração específico daquela moeda (solo pede endereço/threads; pool pede endereço, worker, URL e senha do pool). Tudo é salvo em `minerar.config.json`.
 
-Para pool, use o flag e informe os dados do pool quando perguntado:
+Para pool, escolha a opção no menu e informe os dados do pool quando perguntado:
 
 ```bash
-python minerar.py --etn
-# → pergunta endereço ETN, worker, URL do pool (stratum+tcp://...), threads...
-
-python minerar.py --xmc
-# → mesma coisa para Monero Classic
+python minerar.py
+# menu → "Outra derivada do CryptoNight"
+# → pergunta endereço, worker, URL do pool (stratum+tcp://...), threads...
 ```
 
-> As moedas que migraram de algoritmo (Zano, Aeon, Dero, Karbo, Sumokoin, Lethean…) ou sem liquidez foram **removidas** da lista — só ficam as que este binário realmente minera.
+> **Por que não há mais ETN e XMC na lista?** As moedas CryptoNight v0 legadas ficaram **inviáveis de minerar**:
+>
+> - **Electroneum (ETN)** — a rede migrou para a "Electroneum Smartchain" (IBFT/PoA, sem mineração). A legacy chain (PoW) ainda usa CryptoNight v0, mas desde o bloco 1.806.749 (mar/2024, HF11) **toda a recompensa vai para um burn address** — o minerador não recebe nada. As pools históricas (easyhash, spacepools, etnpool, nanopool) estão **fora do ar**.
+> - **Monero Classic (XMC)** — a chain v1 (CryptoNight v0) está sendo **descontinuada** em favor do XMC 3.0/4.0 (**RandomX**, incompatível com o `minerd`). As pools tradicionais (`pool.moneroclassic.org`, tpool.io) estão offline ou inacessíveis.
+>
+> Se você conhecer uma **pool CryptoNight v0 ativa**, informe a URL que o `minerar.py` aceita via menu (opção custom) — e podemos adicioná-la como opção fixa.
 
 #### Onde instalar os arquivos da Nerva
 
@@ -348,7 +350,7 @@ Tabela prática de **algoritmo → minerador → moeda**:
 | **Ethash (ETCHash)** | Ethereum Classic (ETC), EtherGem (EGEM) | lolMiner, TeamRedMiner, NBMiner | GPU (AMD/NVIDIA) |
 | **KawPow** | Ravencoin (RVN) | lolMiner, TeamRedMiner | GPU |
 | **RandomX** | Monero (XMR) moderno | XMRig | **CPU** (AMD Ryzen é o melhor) |
-| **CryptoNight** | Monero (XMR) antigo, Electroneum (ETN), Monero Classic (XMC) | **cpuminer-multi** (este!) | CPU |
+| **CryptoNight** | Monero (XMR) antigo, Nerva (XNV — CNA v6), pools CryptoNight v0 | **cpuminer-multi** (este!) / nervad | CPU |
 | **VerusHash** | VerusCoin (VRSC) | VerusMiner, XMRig | **CPU** (Android até!) |
 | **Yespower** | Yenten (YTN), Safecoin (SAFE) | cpuminer-opt | CPU |
 | **GhostRider** | Raptoreum (RTM) | cpuminer-opt | CPU |

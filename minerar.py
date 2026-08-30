@@ -20,8 +20,6 @@ Uso:
 
 Moedas suportadas (cada uma tem um flag próprio):
     python minerar.py --nerva        # Nerva (XNV)  — SOLO, com o nervad.exe (CNA v6)
-    python minerar.py --etn          # Electroneum (ETN) — pool, com o minerd (CN v0)
-    python minerar.py --xmc          # Monero Classic (XMC) — pool, com o minerd (CN v0)
 
 Sem flag, o script pergunta QUAL moeda minerar na primeira configuração.
 
@@ -150,11 +148,20 @@ def config_padrao():
 #
 #   * Nerva (XNV)  → SOLO, sem pool. Usa o daemon oficial nervad.exe
 #                    (CryptoNight-Adaptive v6) — NÃO usa o minerd.
-#   * ETN / XMC    → via pool com o minerd (CryptoNight v0).
+#   * Custom        → pool CryptoNight v0 qualquer com JSON-RPC 2.0.
+# As demais moedas CryptoNight legadas (ETN, XMC, etc.) foram removidas porque
+# a mineração delas está inviável hoje (pools mortas, recompensa queimada,
+# migração de algoritmo ou rede).
 #
 # Foram REMOVIDAS as que migraram de algoritmo (Zano-PoW, cryptonight-lite,
-# K12, AstroBWT, CN-R, Argon2id, RandomX...) e as sem liquidez real.
-# Cada moeda tem um flag CLI próprio: python minerar.py --nerva / --etn / --xmc
+# K12, AstroBWT, CN-R, Argon2id, RandomX...), as sem liquidez real e as que
+# viraram inviáveis de minerar:
+#   * Electroneum (ETN) — migrou para a Smartchain (IBFT/PoA, sem mineração);
+#     a legacy chain (PoW) queima a recompensa (burn address) desde o bloco
+#     1.806.749 (mar/2024) e não há mais pools ativas.
+#   * Monero Classic (XMC) — chain v1 (CN v0) sendo descontinuada em favor do
+#     XMC 3.0/4.0 (RandomX, incompatível); pools tradicionais fora do ar.
+# Cada moeda tem um flag CLI próprio: python minerar.py --nerva
 MOEDAS_CRYPTONIGHT = [
     {
         "flag": "nerva",          # python minerar.py --nerva
@@ -168,32 +175,6 @@ MOEDAS_CRYPTONIGHT = [
         "nota": "SOLO sem pool — recompensa de bloco direto na sua carteira.",
         "gerar_carteira": True,   # tem gerador de carteira integrado
         "prefixo": "NV",          # validação de endereço
-    },
-    {
-        "flag": "etn",            # python minerar.py --etn
-        "nome": "Electroneum (ETN)",
-        "ticker": "ETN",
-        "modo": "pool",
-        "algo": "CryptoNight v0 (minerd)",
-        "dificuldade": "Média",
-        "mercado": "CG #1025 · US$13,3 mi · vol ~US$294 mil/dia",
-        "payout_min": "100 ETN",
-        "nota": "Mine na rede legada (Legacy L1) — confirme a pool antes.",
-        "gerar_carteira": False,
-        "prefixo": "etn",
-    },
-    {
-        "flag": "xmc",            # python minerar.py --xmc
-        "nome": "Monero Classic (XMC)",
-        "ticker": "XMC",
-        "modo": "pool",
-        "algo": "CryptoNight v0 (minerd)",
-        "dificuldade": "Baixa",
-        "mercado": "CMC · vol ~US$16,6 mil/dia",
-        "payout_min": "1 XMC",
-        "nota": "Pools ativas: tpool.io, Minergate. Fork pré-RandomX do Monero.",
-        "gerar_carteira": False,
-        "prefixo": "4",
     },
     {
         "flag": "custom",         # pool CryptoNight v0 personalizada
@@ -230,7 +211,7 @@ def eh_solo(nome_moeda):
 
 
 def moeda_pela_cli(args):
-    """Devolve o registro da moeda pedida pelos flags CLI (--nerva/--etn/--xmc)."""
+    """Devolve o registro da moeda pedida pelos flags CLI (--nerva)."""
     for m in MOEDAS_CRYPTONIGHT:
         if getattr(args, m["flag"], False):
             return m
@@ -258,7 +239,7 @@ def escolher_moeda():
         if m["flag"] != "custom":
             print(f"      Rode: python minerar.py --{m['flag']}")
     print("-" * 64)
-    print("  (digite o número da moeda, o nome, ou o flag --etn/--xmc)")
+    print("  (digite o número da moeda ou o nome)")
     print()
 
     while True:
@@ -273,7 +254,7 @@ def escolher_moeda():
                 return MOEDAS_CRYPTONIGHT[idx - 1]["nome"]
         except ValueError:
             pass
-        # Flag (--etn / --xmc / --nerva) ou nome
+        # Flag (--nerva) ou nome da moeda
         m = info_moeda(valor)
         if m:
             return m["nome"]
@@ -1601,8 +1582,6 @@ def main():
                "  python minerar.py --show         # ver a config salva\n"
                "  python minerar.py --benchmark    # benchmark offline\n"
                "  python minerar.py --nerva        # minera Nerva (XNV) solo com nervad.exe\n"
-               "  python minerar.py --etn          # minera Electroneum (ETN) via pool\n"
-               "  python minerar.py --xmc          # minera Monero Classic (XMC) via pool\n"
                "  python minerar.py --nerva --gerar-carteira   # gera carteira Nerva\n"
                "  python minerar.py --saldo        # saldo da carteira Nerva salva\n"
                "  python minerar.py -t 2 --throttle 2000   # ajusta no run atual\n",
@@ -1662,14 +1641,6 @@ def main():
     parser.add_argument(
         "--nerva", action="store_true",
         help="Minera Nerva (XNV) solo com o daemon oficial nervad (sem pool, sem minerd).",
-    )
-    parser.add_argument(
-        "--etn", "--electroneum", action="store_true", dest="etn",
-        help="Minera Electroneum (ETN) via pool (CryptoNight v0).",
-    )
-    parser.add_argument(
-        "--xmc", "--monero-classic", action="store_true", dest="xmc",
-        help="Minera Monero Classic (XMC) via pool (CryptoNight v0).",
     )
     parser.add_argument(
         "--gerar-carteira", nargs="?", const="__interativo__", metavar="HEX",
@@ -1805,7 +1776,7 @@ def main():
 
     if cfg is None:
         # Não há config salva. Se o usuário passou um flag de moeda (-o/-u)
-        # ou CLI flag (--nerva/--etn/--xmc), monta a config direto.
+        # ou CLI flag (--nerva), monta a config direto.
         pedida = moeda_pela_cli(args)
         if pedida:
             cfg = configurar(coin_fixa=pedida["nome"])
